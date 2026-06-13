@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Run with: npm run prisma:seed
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  recruiter
+  team_leader
+  admin
+}
+
+enum UserStatus {
+  active
+  inactive
+}
+
+enum CandidateSource {
+  linkedin
+  naukri
+  referral
+  website
+  walk_in
+  other
+}
+
+enum CandidateStatus {
+  new
+  screening
+  maybe
+  interviewed
+  shortlisted
+  offered
+  hired
+  rejected
+  hold
+}
+
+enum CallStatus {
+  not_received
+  not_reachable
+  interested
+  not_interested
+  callback
+  interviewed
+  confirmed
+}
+
+enum ApplicationStatus {
+  applied
+  in_review
+  shortlisted
+  interviewed
+  offered
+  joined
+  rejected
+}
+
+enum FollowUpStatus {
+  pending
+  completed
+  missed
+}
+
+model User {
+  id       String     @id @default(uuid())
+  name     String
+  email    String     @unique
+  password String
+  role     UserRole   @default(recruiter)
+  status   UserStatus @default(active)
+}
+
+model Employee {
+  id           String    @id @default(uuid())
+  employee_code String?  @unique
+  first_name   String
+  last_name    String
+  email        String?
+  mobile       String
+  department   String?
+  designation  String?
+  joining_date DateTime?
+  status       String    @default("active")
+  created_at   DateTime  @default(now())
+}
+
+model Candidate {
+  id                  String          @id @default(uuid())
+  first_name          String?
+  last_name           String?
+  name                String
+  mobile              String
+  alt_mobile          String?
+  email               String?         @unique
+  skills              String[]
+  experience          Float
+  source              CandidateSource @default(other)
+  portal_id           String?
+  process             String?
+  current_company     String?
+  education           String?
+  preferred_locations String[]
+  salary              String?
+  location            String?
+  notice_period       String?
+  call_status         CallStatus?
+  interview_date      DateTime?
+  rejection_reason    String?
+  resume_url          String?
+  status              CandidateStatus @default(new)
+  created_by          String?
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
+
+  applications  Application[]
+  followups     FollowUp[]
+  comments      CandidateComment[]
+  invitations   CandidateInvitation[]
+}
+
+model CandidateComment {
+  id           String   @id @default(uuid())
+  candidate_id String
+  author_id    String?
+  author_name  String
+  author_email String?
+  content      String
+  created_at   DateTime @default(now())
+
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+}
+
+model ClientCompany {
+  id   String @id @default(uuid())
+  name String @unique
+
+  invitations CandidateInvitation[]
+}
+
+model CandidateInvitation {
+  id                 String     @id @default(uuid())
+  candidate_id       String
+  company_id         String
+  call_status        CallStatus?
+  reschedule_date    DateTime?
+  comment            String?
+  submitted_by       String?
+  created_at         DateTime   @default(now())
+
+  candidate Candidate     @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+  company   ClientCompany @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+  @@index([company_id])
+}
+
+model Job {
+  id                  String   @id @default(uuid())
+  title               String
+  company_name        String
+  skills_required     String[]
+  experience_required Float
+
+  applications Application[]
+}
+
+model Application {
+  id           String            @id @default(uuid())
+  candidate_id String
+  job_id       String
+  match_score  Float?
+  status       ApplicationStatus @default(applied)
+
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+  job       Job       @relation(fields: [job_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+  @@index([job_id])
+  @@unique([candidate_id, job_id])
+}
+
+model FollowUp {
+  id            String         @id @default(uuid())
+  candidate_id  String
+  next_followup DateTime
+  status        FollowUpStatus @default(pending)
+  comments      String?
+
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+}
+
+model Contact {
+  id      String @id @default(uuid())
+  name    String
+  email   String
+  message String
+}

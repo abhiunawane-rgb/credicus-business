@@ -1,0 +1,36 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next
+/out
+
+# deploy artifacts
+*.zip
+
+# user uploads
+/public/uploads
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# local env files
+.env*.local
+.env
+
+# prisma
+/prisma/dev.db
+/prisma/dev.db-journal
+
+# typescript
+*.tsbuildinfo
