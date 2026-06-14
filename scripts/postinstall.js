@@ -27,8 +27,13 @@ if (!fs.existsSync(schemaPath)) {
 }
 
 console.log("Running prisma generate...");
-execSync("npx prisma generate --schema=./prisma/schema.prisma", {
-  stdio: "inherit",
-  cwd: root,
-});
-console.log("Prisma client generated.");
+try {
+  execSync("npx prisma generate --schema=./prisma/schema.prisma", {
+    stdio: "inherit",
+    cwd: root,
+  });
+  console.log("Prisma client generated.");
+} catch (error) {
+  console.warn("Prisma generate skipped or failed — demo mode still works without DATABASE_URL.");
+  console.warn(String(error.message || error));
+}

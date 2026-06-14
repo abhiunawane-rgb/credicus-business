@@ -12,7 +12,7 @@ export default async function RecruiterInvitationsPage() {
   return (
     <section className="space-y-6">
       <DashboardHeader
-        icon={Send}
+        iconName="send"
         title="Invitations"
         description="Submit candidates to client companies with call status, reschedule date, and comments."
       />

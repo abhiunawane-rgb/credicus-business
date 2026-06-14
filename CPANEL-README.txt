@@ -2,8 +2,10 @@ CREDICUS — cPanel deploy (UPDATED)
 ==================================
 
 ERROR: "500 Internal Server Error" after Run NPM Install
-CAUSE:  App was not built — missing .next folder on server.
-        cPanel starts the app immediately and health-check fails.
+CAUSE:  Usually one of:
+        - Missing .next/BUILD_ID (build not uploaded)
+        - Prisma client not generated
+        - App crash on startup (see Passenger log)
 
 SOLUTION: Upload a PRE-BUILT package (includes .next folder)
 ------------------------------------------------------------
@@ -27,24 +29,39 @@ ON CPANEL:
   4. Setup Node.js App:
        Application root:  public_html/credicus.in
        Startup file:      app.js
-       Node version:      20.x  (recommended — avoid 24 if possible)
+       Node version:      24.x is OK (use whatever your host offers)
        Mode:              Production
 
-  5. Environment variables:
-       JWT_SECRET = long-random-secret-min-32-chars
-       NODE_ENV   = production
-       COOKIE_SECURE = true          (set when HTTPS/SSL is enabled)
+  5. Environment variables (EXACT names — do not invent custom names):
+       Name: JWT_SECRET
+       Value: credicus-test-secret-min-32-characters-long
 
-  If login works but you are immediately signed out, set COOKIE_SECURE=true
-  after SSL is enabled, or ALLOW_INSECURE_COOKIES=true only for HTTP testing.
+       Name: NODE_ENV
+       Value: production
+
+       If HTTPS/SSL is ON:
+       Name: COOKIE_SECURE
+       Value: true
+
+       If HTTPS/SSL is OFF (HTTP testing only):
+       Name: ALLOW_INSECURE_COOKIES
+       Value: true
+
+  WRONG: credicusemployeemanagement=production  (this breaks the app)
+  RIGHT: NODE_ENV=production  and  JWT_SECRET=your-secret
+
+  5b. Node.js version: if only 24.x is available, use it — Credicus works on Node 24.
 
   6. Click "Run NPM Install"
-  7. Click "Restart"
-     (Do NOT need npm run build on server — already built)
+  7. In Terminal: cd ~/public_html/credicus.in && npx prisma generate
+  8. Click "Restart"
 
-package.json on server must NOT have postinstall script.
-Build command is only needed if you upload source without .next:
-  npm run build
+  STILL 500? Run diagnostic from cPanel:
+  - Setup Node.js App -> "Run JS script" -> scripts/cpanel-diagnose.js
+  OR Terminal: node scripts/cpanel-diagnose.js
+
+  Then open the Passenger log (link in Setup Node.js App) and look for
+  lines starting with [credicus] — paste the error if you need help.
 
 Demo logins (no database required):
   recruiter@credicus.com / Recruiter@123

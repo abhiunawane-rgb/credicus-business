@@ -12,7 +12,7 @@ export default async function NewCandidatePage() {
   return (
     <section className="space-y-6">
       <DashboardHeader
-        icon={UserPlus}
+        iconName="userPlus"
         title="Add New Candidate"
         description="Complete candidate data form as defined in Credicus Flow — source, process, call status, and comments."
       />

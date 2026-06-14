@@ -16,7 +16,7 @@ export default async function RecruiterResumesPage() {
   return (
     <section className="space-y-6">
       <DashboardHeader
-        icon={FileText}
+        iconName="fileText"
         title="Resume Management"
         description="Upload resumes, store them under /uploads, and save the file path in the candidate record."
       />

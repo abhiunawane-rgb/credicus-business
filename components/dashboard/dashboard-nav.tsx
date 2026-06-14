@@ -84,8 +84,18 @@ function flattenGroups(groups: NavGroup[]): NavItem[] {
   return groups.flatMap((group) => group.items);
 }
 
-function isActive(pathname: string, href: string): boolean {
-  return pathname === href || pathname.startsWith(`${href}/`);
+function isActive(pathname: string, href: string, allHrefs: string[]): boolean {
+  if (pathname === href) return true;
+  if (!pathname.startsWith(`${href}/`)) return false;
+
+  const hasMoreSpecificMatch = allHrefs.some(
+    (other) =>
+      other !== href &&
+      other.startsWith(`${href}/`) &&
+      (pathname === other || pathname.startsWith(`${other}/`)),
+  );
+
+  return !hasMoreSpecificMatch;
 }
 
 type DashboardNavProps = {
@@ -113,7 +123,8 @@ export default function DashboardNav({ role }: DashboardNavProps) {
   );
 
   const [moreOpen, setMoreOpen] = useState(false);
-  const secondaryActive = secondaryItems.some((item) => isActive(pathname, item.href));
+  const allHrefs = useMemo(() => allItems.map((item) => item.href), [allItems]);
+  const secondaryActive = secondaryItems.some((item) => isActive(pathname, item.href, allHrefs));
 
   useEffect(() => {
     setMoreOpen(false);
@@ -143,7 +154,7 @@ export default function DashboardNav({ role }: DashboardNavProps) {
                 {group.label}
               </span>
               {group.items.map((item) => {
-                const active = isActive(pathname, item.href);
+                const active = isActive(pathname, item.href, allHrefs);
                 return (
                   <Link
                     key={item.href}
@@ -161,7 +172,7 @@ export default function DashboardNav({ role }: DashboardNavProps) {
 
         <div className="flex items-center gap-1 lg:hidden">
           {primaryItems.map((item) => {
-            const active = isActive(pathname, item.href);
+            const active = isActive(pathname, item.href, allHrefs);
             return (
               <Link
                 key={item.href}
@@ -193,7 +204,7 @@ export default function DashboardNav({ role }: DashboardNavProps) {
                   className="absolute right-0 top-[calc(100%+0.35rem)] z-20 min-w-[11rem] animate-dropdown-in rounded-xl border border-credicus-border bg-credicus-card p-1.5 shadow-brand-lg"
                 >
                   {secondaryItems.map((item) => {
-                    const active = isActive(pathname, item.href);
+                    const active = isActive(pathname, item.href, allHrefs);
                     return (
                       <Link
                         key={item.href}

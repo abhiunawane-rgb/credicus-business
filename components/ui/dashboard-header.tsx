@@ -1,19 +1,23 @@
-import type { LucideIcon } from "lucide-react";
+"use client";
+
 import { Lightbulb } from "lucide-react";
 import IconBadge from "@/components/ui/icon-badge";
+import { getDashboardIcon, type DashboardIconName } from "@/lib/dashboard-icons";
 
 type DashboardHeaderProps = {
   title: string;
   description: string;
-  icon: LucideIcon;
+  iconName: DashboardIconName;
   tip?: string;
 };
 
-export default function DashboardHeader({ title, description, icon, tip }: DashboardHeaderProps) {
+export default function DashboardHeader({ title, description, iconName, tip }: DashboardHeaderProps) {
+  const Icon = getDashboardIcon(iconName);
+
   return (
     <header className="animate-fade-in-up space-y-4">
       <div className="flex items-start gap-4">
-        <IconBadge icon={icon} variant="dark" size="lg" className="animate-pulse-glow" />
+        <IconBadge icon={Icon} variant="dark" size="lg" className="animate-pulse-glow" />
         <div className="min-w-0">
           <h1 className="text-xl font-semibold text-white sm:text-2xl">{title}</h1>
           <p className="mt-1 max-w-3xl text-sm leading-relaxed text-credicus-gray-light sm:text-base">{description}</p>

@@ -12,7 +12,7 @@ export default async function RecruiterFollowUpsPage() {
   return (
     <section className="space-y-6">
       <DashboardHeader
-        icon={Phone}
+        iconName="phone"
         title="Follow-up Tracker"
         description="Track upcoming interviews, call status, and next actions for all candidates."
       />

@@ -16,9 +16,16 @@ function isDbError(error: unknown): boolean {
   const message = (error as Error).message ?? "";
   return (
     message.includes("Can't reach database") ||
+    message.includes("Can't reach database server") ||
     message.includes("P1001") ||
+    message.includes("P1012") ||
+    message.includes("P2021") ||
+    message.includes("P2022") ||
     message.includes("Unknown arg") ||
-    message.includes("Invalid")
+    message.includes("Invalid") ||
+    message.includes("does not exist") ||
+    message.includes("ConnectorError") ||
+    message.includes("Environment variable not found")
   );
 }
 

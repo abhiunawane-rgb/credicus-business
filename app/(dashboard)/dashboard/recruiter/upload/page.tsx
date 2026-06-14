@@ -16,7 +16,7 @@ export default async function RecruiterUploadPage() {
   return (
     <section className="space-y-6">
       <DashboardHeader
-        icon={FileSpreadsheet}
+        iconName="fileSpreadsheet"
         title="Candidate Import"
         description="Upload Excel sheets to bulk import candidate data into the CRM."
       />

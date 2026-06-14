@@ -10,13 +10,13 @@
     "dev:clean": "powershell -ExecutionPolicy Bypass -File scripts/dev-clean.ps1",
     "start:demo": "powershell -ExecutionPolicy Bypass -File scripts/dev-clean.ps1",
     "build": "prisma generate && next build",
-    "build:cpanel": "powershell -ExecutionPolicy Bypass -File scripts/create-cpanel-package.ps1",
-    "start": "next start",
+    "start": "node app.js",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
-    "prisma:setup": "prisma db push && tsx prisma/seed.ts"
+    "prisma:setup": "prisma db push && tsx prisma/seed.ts",
+    "cpanel:diagnose": "node scripts/cpanel-diagnose.js"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
@@ -28,8 +28,8 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@types/node": "^24.9.0",
-    "@types/react": "^19.2.2",
+    "@types/node": "24.13.2",
+    "@types/react": "19.2.17",
     "@types/react-dom": "^19.2.2",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.38.0",

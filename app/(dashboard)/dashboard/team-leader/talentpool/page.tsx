@@ -12,7 +12,7 @@ export default async function TeamLeaderTalentPoolPage() {
   return (
     <section className="space-y-6">
       <DashboardHeader
-        icon={Database}
+        iconName="database"
         title="Talent Pool"
         description="Full candidate pool view. Team Leaders can update stages and add comment logs."
       />

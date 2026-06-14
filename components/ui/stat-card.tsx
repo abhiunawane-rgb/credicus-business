@@ -1,13 +1,31 @@
 "use client";
 
+import { Calendar, CheckCircle, UserPlus, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import IconBadge from "@/components/ui/icon-badge";
+import { getDashboardIcon, type DashboardIconName } from "@/lib/dashboard-icons";
+
+const summaryIcons = {
+  userPlus: UserPlus,
+  calendar: Calendar,
+  checkCircle: CheckCircle,
+  users: Users,
+} as const satisfies Record<string, LucideIcon>;
+
+export type StatIconName = DashboardIconName | keyof typeof summaryIcons;
+
+function resolveIcon(name: StatIconName): LucideIcon {
+  if (name in summaryIcons) {
+    return summaryIcons[name as keyof typeof summaryIcons];
+  }
+  return getDashboardIcon(name as DashboardIconName);
+}
 
 type StatCardProps = {
   label: string;
   value: string;
-  icon: LucideIcon;
+  iconName: StatIconName;
   trend?: string;
   dark?: boolean;
   delay?: number;
@@ -41,8 +59,9 @@ function useCountUp(target: string, duration = 600) {
   return display;
 }
 
-export default function StatCard({ label, value, icon, trend, dark = true, delay = 0 }: StatCardProps) {
+export default function StatCard({ label, value, iconName, trend, dark = true, delay = 0 }: StatCardProps) {
   const animatedValue = useCountUp(value);
+  const Icon = resolveIcon(iconName);
 
   return (
     <article
@@ -68,7 +87,7 @@ export default function StatCard({ label, value, icon, trend, dark = true, delay
           {trend ? <p className="mt-1 text-xs text-credicus-yellow">{trend}</p> : null}
         </div>
         <IconBadge
-          icon={icon}
+          icon={Icon}
           variant={dark ? "dark" : "light"}
           className="transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
         />

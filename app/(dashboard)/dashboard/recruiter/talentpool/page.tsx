@@ -12,7 +12,7 @@ export default async function RecruiterTalentPoolPage() {
   return (
     <section className="space-y-6">
       <DashboardHeader
-        icon={Database}
+        iconName="database"
         title="Talent Pool"
         description="View all candidates in the shared pool. Contact Team Leader to request ownership changes."
         tip="This is a read-only view. Use Candidates tab to edit stages and add comment logs."

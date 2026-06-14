@@ -19,7 +19,7 @@ export default async function AdminReportsPage() {
   return (
     <section className="space-y-6">
       <DashboardHeader
-        icon={BarChart3}
+        iconName="barChart3"
         title="Reports"
         description="Month-wise hiring data, recruiter performance, and client-wise summaries."
       />

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { BarChart3, Database, Headphones, Shield, UserCog, UserPlus, Users } from "lucide-react";
+import { BarChart3, Database, UserPlus } from "lucide-react";
 import AdminPanel from "@/components/admin/admin-panel";
 import ClientSummaryTable from "@/components/dashboard/client-summary-table";
 import RecruiterSummaryTable from "@/components/dashboard/recruiter-summary-table";
@@ -21,16 +21,16 @@ export default async function AdminDashboardPage() {
   return (
     <section className="space-y-6">
       <DashboardHeader
-        icon={Shield}
+        iconName="shield"
         title="Admin Dashboard"
         description="Manage users, role assignments, data movement, and system controls in one place."
         tip="Offline password reset: go to Manage Users → Reset Password → share the new password securely with the user."
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Total Users" value="12" icon={Users} />
-        <StatCard label="Active Recruiters" value="8" icon={UserCog} trend="4 online now" />
-        <StatCard label="Pending Support" value="4" icon={Headphones} />
+        <StatCard label="Total Users" value="12" iconName="users" />
+        <StatCard label="Active Recruiters" value="8" iconName="userCog" trend="4 online now" />
+        <StatCard label="Pending Support" value="4" iconName="headphones" />
       </div>
 
       <TodaySummary />

@@ -1,6 +1,5 @@
 "use client";
 
-import { Calendar, CheckCircle, UserPlus, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import StatCard from "@/components/ui/stat-card";
 import { StaggerChildren } from "@/components/ui/animated-reveal";
@@ -50,14 +49,14 @@ export default function TodaySummary() {
 
   return (
     <StaggerChildren className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5" stagger={70}>
-      <StatCard label="Created Today" value={String(stats.createdToday)} icon={UserPlus} />
-      <StatCard label="Interviews Today" value={String(stats.interviewsToday)} icon={Calendar} />
-      <StatCard label="Confirmed Today" value={String(stats.confirmedToday)} icon={CheckCircle} />
-      <StatCard label="Selections (Month)" value={String(stats.selectionsMonth)} icon={Users} />
+      <StatCard label="Created Today" value={String(stats.createdToday)} iconName="userPlus" />
+      <StatCard label="Interviews Today" value={String(stats.interviewsToday)} iconName="calendar" />
+      <StatCard label="Confirmed Today" value={String(stats.confirmedToday)} iconName="checkCircle" />
+      <StatCard label="Selections (Month)" value={String(stats.selectionsMonth)} iconName="users" />
       <StatCard
         label="Joinings (Month)"
         value={String(stats.joiningsMonth)}
-        icon={Users}
+        iconName="users"
         trend={`${stats.totalCandidates} total`}
       />
     </StaggerChildren>

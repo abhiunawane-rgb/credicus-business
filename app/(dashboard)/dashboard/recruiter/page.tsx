@@ -17,7 +17,7 @@ export default async function RecruiterDashboardPage() {
   return (
     <section className="space-y-6">
       <DashboardHeader
-        icon={Users}
+        iconName="users"
         title={`${greeting}, ${firstName}`}
         description="Track today's hiring activity, manage candidates, and move talent through your pipeline."
       />

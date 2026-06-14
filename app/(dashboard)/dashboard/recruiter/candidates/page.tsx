@@ -12,7 +12,7 @@ export default async function RecruiterCandidatesPage() {
   return (
     <section className="space-y-6">
       <DashboardHeader
-        icon={Users}
+        iconName="users"
         title="Candidates"
         description="Manage candidates with Naukri-style cards — change stage, shortlist, reject, and log comments."
       />

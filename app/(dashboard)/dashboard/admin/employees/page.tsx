@@ -12,7 +12,7 @@ export default async function AdminEmployeesPage() {
   return (
     <section className="space-y-6">
       <DashboardHeader
-        icon={UserPlus}
+        iconName="userPlus"
         title="Employee Data"
         description="Add and manage internal employee records — recruiters, team leaders, and staff."
       />

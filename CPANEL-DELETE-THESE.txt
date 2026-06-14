@@ -1,0 +1,11 @@
+DELETE these files on the server (File Manager -> public_html/credicus.in):
+
+  next.config.ts     <-- causes crash (needs TypeScript)
+  next.config.mjs    <-- delete if present (keep next.config.js only)
+
+KEEP these files from credicus-fix.zip:
+
+  next.config.js
+  app.js
+  package.json
+  .npmrc

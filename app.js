@@ -1,52 +1,89 @@
 /**
- * cPanel Node.js startup file.
- * Requires a production build (.next/BUILD_ID) — use create-cpanel-package.ps1
- * which builds locally and includes .next in the upload ZIP.
+ * cPanel startup — standalone server when present, else custom Next.js server.
  */
-const { createServer } = require("http");
-const { parse } = require("url");
 const fs = require("fs");
 const path = require("path");
-const next = require("next");
+const Module = require("module");
 
-const port = parseInt(process.env.PORT || "3000", 10);
-const hostname = "0.0.0.0";
 const dir = __dirname;
-const buildIdPath = path.join(dir, ".next", "BUILD_ID");
+const home = process.env.HOME || "";
+const port = parseInt(process.env.PORT || "3000", 10);
+const host = "127.0.0.1";
 
-if (!fs.existsSync(buildIdPath)) {
-  console.error("");
-  console.error("ERROR: Production build missing (.next/BUILD_ID not found).");
-  console.error("Run on your PC:  npm run build");
-  console.error("Then upload the .next folder, OR use scripts/create-cpanel-package.ps1");
-  console.error("");
+function log(msg) {
+  console.log(`[credicus] ${msg}`);
+}
+function die(msg) {
+  console.error(`[credicus] ERROR: ${msg}`);
+  process.exit(1);
 }
 
+function wireNodeModules() {
+  const candidates = [
+    path.join(dir, "node_modules"),
+    path.join(home, "nodevenv/public_html/credicus.in/24/lib/node_modules"),
+    path.join(home, "nodeenv/public_html/credicus.in/24/lib/node_modules"),
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(path.join(candidate, "next"))) {
+      if (candidate !== path.join(dir, "node_modules")) {
+        process.env.NODE_PATH = [candidate, process.env.NODE_PATH].filter(Boolean).join(path.delimiter);
+        Module._initPaths();
+      }
+      log(`node_modules: ${candidate}`);
+      return;
+    }
+  }
+  die("Cannot find 'next'. Run NPM Install, then Restart.");
+}
+
+const standaloneServer = path.join(dir, ".next", "standalone", "server.js");
+if (fs.existsSync(standaloneServer)) {
+  log("starting standalone server");
+  process.chdir(path.join(dir, ".next", "standalone"));
+  process.env.HOSTNAME = host;
+  if (!process.env.PORT) process.env.PORT = String(port);
+  require("./server.js");
+  return;
+}
+
+wireNodeModules();
+
+if (!fs.existsSync(path.join(dir, ".next", "BUILD_ID"))) {
+  die("Missing .next/BUILD_ID");
+}
+if (fs.existsSync(path.join(dir, "next.config.ts"))) {
+  die("Delete next.config.ts");
+}
+if (!fs.existsSync(path.join(dir, "next.config.js"))) {
+  die("Create next.config.js");
+}
+
+log(`build: ${fs.readFileSync(path.join(dir, ".next", "BUILD_ID"), "utf8").trim()}`);
+
+const http = require("http");
+const { parse } = require("url");
+const next = require("next");
 const app = next({ dev: false, dir });
 const handle = app.getRequestHandler();
 
-const ready = app.prepare().then(() => {
-  const server = createServer(async (req, res) => {
-    try {
-      const parsedUrl = parse(req.url, true);
-      await handle(req, res, parsedUrl);
-    } catch (error) {
-      console.error("Request error:", req.url, error);
-      res.statusCode = 500;
-      res.end("Internal Server Error");
-    }
+module.exports = app
+  .prepare()
+  .then(() => {
+    log("Next.js ready");
+    const server = http.createServer((req, res) => {
+      handle(req, res, parse(req.url, true)).catch((err) => {
+        console.error("[credicus]", err);
+        if (!res.headersSent) {
+          res.statusCode = 500;
+          res.end("Internal Server Error");
+        }
+      });
+    });
+    server.listen(port, host, () => log(`listening on ${host}:${port}`));
+    return server;
+  })
+  .catch((err) => {
+    console.error("[credicus] startup failed:", err);
+    process.exit(1);
   });
-
-  server.listen(port, hostname, () => {
-    console.log(`Credicus running on port ${port} (production)`);
-  });
-
-  return server;
-});
-
-ready.catch((error) => {
-  console.error("Failed to start Next.js:", error);
-  process.exit(1);
-});
-
-module.exports = ready;

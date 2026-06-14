@@ -12,7 +12,7 @@ export default async function TeamLeaderCandidatesPage() {
   return (
     <section className="space-y-6">
       <DashboardHeader
-        icon={Users}
+        iconName="users"
         title="Candidates"
         description="Review team candidates, change stages, and maintain comment logs."
       />

@@ -21,6 +21,13 @@ if (-not (Test-Path (Join-Path $projectRoot ".next\BUILD_ID"))) {
   exit 1
 }
 
+$standaloneDir = Join-Path $projectRoot ".next\standalone"
+if (Test-Path $standaloneDir) {
+  Write-Host "Copying standalone static assets..."
+  Copy-Item -Path (Join-Path $projectRoot ".next\static") -Destination (Join-Path $standaloneDir ".next\static") -Recurse -Force
+  Copy-Item -Path (Join-Path $projectRoot "public") -Destination (Join-Path $standaloneDir "public") -Recurse -Force
+}
+
 Write-Host "Step 3/3: Creating credicus-cpanel.zip ..."
 
 $itemsToInclude = @(
@@ -32,10 +39,12 @@ $itemsToInclude = @(
   "scripts",
   ".next",
   "app.js",
+  "test-server.js",
+  ".npmrc",
+  "next.config.js",
   "postcss.config.js",
   "package.json",
   "package-lock.json",
-  "next.config.ts",
   "tailwind.config.ts",
   "tsconfig.json",
   "CPANEL-README.txt"

@@ -34,16 +34,16 @@ export default async function TeamLeaderDashboardPage() {
   return (
     <section className="space-y-6">
       <DashboardHeader
-        icon={Users}
+        iconName="users"
         title="Team Leader Dashboard"
         description="Monitor recruiter productivity, conversion funnel, and assign fresh leads to the team."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Total Calls" value="223" icon={Phone} trend="+12% vs last week" />
-        <StatCard label="Interviews" value="76" icon={Users} />
-        <StatCard label="Selections" value="30" icon={UserCheck} />
-        <StatCard label="Joinings" value="18" icon={UserPlus} trend="60% conversion" />
+        <StatCard label="Total Calls" value="223" iconName="phone" trend="+12% vs last week" />
+        <StatCard label="Interviews" value="76" iconName="users" />
+        <StatCard label="Selections" value="30" iconName="userCheck" />
+        <StatCard label="Joinings" value="18" iconName="userPlus" trend="60% conversion" />
       </div>
 
       <TodaySummary />
