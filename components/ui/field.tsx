@@ -1,4 +1,5 @@
-import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
+import type { InputHTMLAttributes, ReactElement, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import { cloneElement, forwardRef, isValidElement } from "react";
 
 type FieldProps = {
   id: string;
@@ -31,7 +32,13 @@ export function Field({ id, label, hint, error, required, children }: FieldProps
           {hint}
         </p>
       ) : null}
-      <div aria-describedby={describedBy}>{children}</div>
+      <div>
+        {isValidElement(children)
+          ? cloneElement(children as ReactElement<{ "aria-describedby"?: string }>, {
+              "aria-describedby": describedBy,
+            })
+          : children}
+      </div>
       {error ? (
         <p id={errorId} className="ui-field-error" role="alert">
           {error}
@@ -46,16 +53,20 @@ type FieldInputProps = InputHTMLAttributes<HTMLInputElement> & {
   variant?: "light" | "dark";
 };
 
-export function FieldInput({ invalid, variant = "light", className = "", ...props }: FieldInputProps) {
+export const FieldInput = forwardRef<HTMLInputElement, FieldInputProps>(function FieldInput(
+  { invalid, variant = "light", className = "", ...props },
+  ref,
+) {
   const base = variant === "dark" ? "ui-input-dark" : "ui-input";
   return (
     <input
       {...props}
+      ref={ref}
       aria-invalid={invalid || undefined}
       className={`${base} ${invalid ? "border-red-400 focus:border-red-400 focus:ring-red-400/30" : ""} ${className}`}
     />
   );
-}
+});
 
 type FieldTextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   invalid?: boolean;
@@ -70,5 +81,28 @@ export function FieldTextarea({ invalid, variant = "light", className = "", ...p
       aria-invalid={invalid || undefined}
       className={`${base} min-h-[7rem] resize-y ${invalid ? "border-red-400 focus:border-red-400 focus:ring-red-400/30" : ""} ${className}`}
     />
+  );
+}
+
+type FieldSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
+  invalid?: boolean;
+  variant?: "light" | "dark";
+  options: Array<{ value: string; label: string }>;
+};
+
+export function FieldSelect({ invalid, variant = "light", options, className = "", ...props }: FieldSelectProps) {
+  const base = variant === "dark" ? "ui-input-dark" : "ui-input";
+  return (
+    <select
+      {...props}
+      aria-invalid={invalid || undefined}
+      className={`${base} ${invalid ? "border-red-400 focus:border-red-400 focus:ring-red-400/30" : ""} ${className}`}
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
   );
 }

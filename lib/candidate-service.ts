@@ -1,4 +1,5 @@
 import type { CandidateRecord, CommentRecord, EmployeeRecord } from "@/lib/candidate-types";
+import { displayCandidateName, normalizeCandidateRecord } from "@/lib/candidate-types";
 import {
   memoryAddComment,
   memoryCreateCandidate,
@@ -10,6 +11,7 @@ import {
   memoryListEmployees,
   memoryUpdateCandidate,
 } from "@/lib/memory-store";
+import { disableDatabase, useDatabase } from "@/lib/db-mode";
 import { prisma } from "@/lib/prisma";
 
 function isDbError(error: unknown): boolean {
@@ -27,6 +29,14 @@ function isDbError(error: unknown): boolean {
     message.includes("ConnectorError") ||
     message.includes("Environment variable not found")
   );
+}
+
+function handleDbError(error: unknown): void {
+  if (isDbError(error)) {
+    disableDatabase();
+    return;
+  }
+  throw error;
 }
 
 function mapDbCandidate(row: Record<string, unknown>): CandidateRecord {
@@ -65,32 +75,41 @@ function mapDbCandidate(row: Record<string, unknown>): CandidateRecord {
 }
 
 export async function listCandidates(search?: string): Promise<CandidateRecord[]> {
-  try {
-    const where = search?.trim()
-      ? {
-          OR: [
-            { name: { contains: search, mode: "insensitive" as const } },
-            { mobile: { contains: search } },
-            { email: { contains: search, mode: "insensitive" as const } },
-          ],
-        }
-      : {};
-    const rows = await prisma.candidate.findMany({ where, orderBy: { name: "desc" } });
-    if (rows.length > 0) return rows.map((r) => mapDbCandidate(r as unknown as Record<string, unknown>));
-  } catch (error) {
-    if (!isDbError(error)) throw error;
+  if (useDatabase()) {
+    try {
+      const where = search?.trim()
+        ? {
+            OR: [
+              { name: { contains: search, mode: "insensitive" as const } },
+              { mobile: { contains: search } },
+              { email: { contains: search, mode: "insensitive" as const } },
+            ],
+          }
+        : {};
+      const rows = await prisma.candidate.findMany({ where, orderBy: { name: "desc" } });
+      if (rows.length > 0) {
+        return rows.map((r) =>
+          normalizeCandidateRecord(mapDbCandidate(r as unknown as Record<string, unknown>)),
+        );
+      }
+    } catch (error) {
+      handleDbError(error);
+    }
   }
-  return memoryListCandidates(search);
+  return memoryListCandidates(search).map(normalizeCandidateRecord);
 }
 
 export async function getCandidate(id: string): Promise<CandidateRecord | null> {
-  try {
-    const row = await prisma.candidate.findUnique({ where: { id } });
-    if (row) return mapDbCandidate(row as unknown as Record<string, unknown>);
-  } catch (error) {
-    if (!isDbError(error)) throw error;
+  if (useDatabase()) {
+    try {
+      const row = await prisma.candidate.findUnique({ where: { id } });
+      if (row) return normalizeCandidateRecord(mapDbCandidate(row as unknown as Record<string, unknown>));
+    } catch (error) {
+      handleDbError(error);
+    }
   }
-  return memoryGetCandidate(id) ?? null;
+  const candidate = memoryGetCandidate(id);
+  return candidate ? normalizeCandidateRecord(candidate) : null;
 }
 
 export async function createCandidate(
@@ -99,7 +118,11 @@ export async function createCandidate(
   const payload = {
     first_name: data.first_name ?? null,
     last_name: data.last_name ?? null,
-    name: data.name,
+    name: displayCandidateName({
+      name: data.name,
+      first_name: data.first_name,
+      last_name: data.last_name,
+    }),
     mobile: data.mobile,
     alt_mobile: data.alt_mobile ?? null,
     email: data.email ?? null,
@@ -122,64 +145,77 @@ export async function createCandidate(
     created_by: data.created_by ?? null,
   };
 
-  try {
-    const row = await prisma.candidate.create({
-      data: {
-        name: payload.name,
-        mobile: payload.mobile,
-        email: payload.email,
-        skills: payload.skills,
-        experience: payload.experience,
-        source: payload.source,
-        resume_url: payload.resume_url,
-        status: payload.status,
-      },
-    });
-    return mapDbCandidate(row as unknown as Record<string, unknown>);
-  } catch (error) {
-    if (!isDbError(error)) throw error;
+  if (useDatabase()) {
+    try {
+      const row = await prisma.candidate.create({
+        data: {
+          name: payload.name,
+          mobile: payload.mobile,
+          email: payload.email,
+          skills: payload.skills,
+          experience: payload.experience,
+          source: payload.source,
+          resume_url: payload.resume_url,
+          status: payload.status,
+        },
+      });
+      return normalizeCandidateRecord(mapDbCandidate(row as unknown as Record<string, unknown>));
+    } catch (error) {
+      handleDbError(error);
+    }
   }
 
-  return memoryCreateCandidate({
-    ...payload,
-    source: String(payload.source),
-    call_status: payload.call_status ? String(payload.call_status) : null,
-    interview_date: payload.interview_date?.toISOString() ?? null,
-    status: (payload.status as CandidateRecord["status"]) ?? "new",
-  } as Omit<CandidateRecord, "id" | "created_at" | "updated_at">);
+  return normalizeCandidateRecord(
+    memoryCreateCandidate({
+      ...payload,
+      source: String(payload.source),
+      call_status: payload.call_status ? String(payload.call_status) : null,
+      interview_date: payload.interview_date?.toISOString() ?? null,
+      status: (payload.status as CandidateRecord["status"]) ?? "new",
+    } as Omit<CandidateRecord, "id" | "created_at" | "updated_at">),
+  );
+}
+
+function definedFields<T extends Record<string, unknown>>(data: T): Partial<T> {
+  return Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined)) as Partial<T>;
 }
 
 export async function updateCandidate(
   id: string,
   data: Partial<CandidateRecord>,
 ): Promise<CandidateRecord | null> {
-  try {
-    const row = await prisma.candidate.update({
-      where: { id },
-      data: {
-        name: data.name,
-        mobile: data.mobile,
-        email: data.email,
-        skills: data.skills,
-        experience: data.experience,
-        source: data.source as never,
-        resume_url: data.resume_url,
-        status: data.status as never,
-      },
-    });
-    return mapDbCandidate(row as unknown as Record<string, unknown>);
-  } catch (error) {
-    if (!isDbError(error)) throw error;
+  const patch = definedFields(data as Record<string, unknown>) as Partial<CandidateRecord>;
+  if (useDatabase()) {
+    try {
+      const row = await prisma.candidate.update({
+        where: { id },
+        data: {
+          name: patch.name,
+          mobile: patch.mobile,
+          email: patch.email,
+          skills: patch.skills,
+          experience: patch.experience,
+          source: patch.source as never,
+          resume_url: patch.resume_url,
+          status: patch.status as never,
+        },
+      });
+      return mapDbCandidate(row as unknown as Record<string, unknown>);
+    } catch (error) {
+      handleDbError(error);
+    }
   }
-  return memoryUpdateCandidate(id, data);
+  return memoryUpdateCandidate(id, patch);
 }
 
 export async function deleteCandidate(id: string): Promise<boolean> {
-  try {
-    await prisma.candidate.delete({ where: { id } });
-    return true;
-  } catch (error) {
-    if (!isDbError(error)) throw error;
+  if (useDatabase()) {
+    try {
+      await prisma.candidate.delete({ where: { id } });
+      return true;
+    } catch (error) {
+      handleDbError(error);
+    }
   }
   return memoryDeleteCandidate(id);
 }

@@ -24,14 +24,14 @@ export default async function AdminReportsPage() {
         description="Month-wise hiring data, recruiter performance, and client-wise summaries."
       />
 
-      <div className="ui-card-dark overflow-x-auto p-4">
-        <h4 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-          <BarChart3 className="h-5 w-5 text-credicus-yellow" />
+      <div className="ui-card overflow-x-auto p-4">
+        <h4 className="mb-4 flex items-center gap-2 text-lg font-semibold text-credicus-ink">
+          <BarChart3 className="h-5 w-5 text-credicus-primary" />
           Month-wise Data
         </h4>
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="border-b border-credicus-border text-credicus-gray">
+            <tr className="border-b border-credicus-line-default bg-credicus-surface text-credicus-gray">
               <th className="px-3 py-2 text-left">Month</th>
               <th className="px-3 py-2 text-left">Candidates Created</th>
               <th className="px-3 py-2 text-left">Interviews</th>
@@ -41,12 +41,12 @@ export default async function AdminReportsPage() {
           </thead>
           <tbody>
             {monthReports.map((row) => (
-              <tr key={row.month} className="border-b border-credicus-border/60 hover:bg-white/5">
-                <td className="px-3 py-3 font-medium text-white">{row.month}</td>
-                <td className="px-3 py-3 text-credicus-gray-light">{row.created}</td>
-                <td className="px-3 py-3 text-credicus-gray-light">{row.interviews}</td>
-                <td className="px-3 py-3 text-credicus-yellow">{row.selections}</td>
-                <td className="px-3 py-3 text-credicus-yellow">{row.joinings}</td>
+              <tr key={row.month} className="border-b border-credicus-line-default hover:bg-credicus-primary-light/50">
+                <td className="px-3 py-3 font-medium text-credicus-ink">{row.month}</td>
+                <td className="px-3 py-3 text-credicus-gray">{row.created}</td>
+                <td className="px-3 py-3 text-credicus-gray">{row.interviews}</td>
+                <td className="px-3 py-3 font-medium text-credicus-primary">{row.selections}</td>
+                <td className="px-3 py-3 font-medium text-credicus-primary">{row.joinings}</td>
               </tr>
             ))}
           </tbody>

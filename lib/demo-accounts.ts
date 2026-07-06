@@ -10,6 +10,10 @@ export type DemoAccount = {
   description: string;
 };
 
+export function displayNameForEmail(email: string): string {
+  return demoAccounts.find((account) => account.email === email)?.name ?? email.split("@")[0];
+}
+
 export const demoAccounts: DemoAccount[] = [
   {
     id: "user-recruiter-1",
@@ -17,7 +21,7 @@ export const demoAccounts: DemoAccount[] = [
     password: "Recruiter@123",
     role: "recruiter",
     roleLabel: "Recruiter",
-    name: "Recruiter User",
+    name: "Arjun Mehta",
     description: "Upload candidates, manage resumes, track leads",
   },
   {
@@ -26,7 +30,7 @@ export const demoAccounts: DemoAccount[] = [
     password: "TeamLeader@123",
     role: "team_leader",
     roleLabel: "Team Leader",
-    name: "Team Leader User",
+    name: "Neha Kapoor",
     description: "Monitor team performance and assign leads",
   },
   {
@@ -35,7 +39,7 @@ export const demoAccounts: DemoAccount[] = [
     password: "Admin@123",
     role: "admin",
     roleLabel: "Admin",
-    name: "Admin User",
+    name: "Sanjay Malhotra",
     description: "Manage users, import data, system settings",
   },
 ];

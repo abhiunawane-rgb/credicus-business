@@ -47,7 +47,9 @@ $itemsToInclude = @(
   "package-lock.json",
   "tailwind.config.ts",
   "tsconfig.json",
-  "CPANEL-README.txt"
+  "CPANEL-README.txt",
+  "CPANEL-SETUP.md",
+  ".env.cpanel.example"
 )
 
 $postcss = Get-ChildItem -Path $projectRoot -Filter "postcss.config.*" | Select-Object -First 1

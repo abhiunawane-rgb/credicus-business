@@ -27,7 +27,6 @@ type StatCardProps = {
   value: string;
   iconName: StatIconName;
   trend?: string;
-  dark?: boolean;
   delay?: number;
 };
 
@@ -59,37 +58,28 @@ function useCountUp(target: string, duration = 600) {
   return display;
 }
 
-export default function StatCard({ label, value, iconName, trend, dark = true, delay = 0 }: StatCardProps) {
+export default function StatCard({ label, value, iconName, trend, delay = 0 }: StatCardProps) {
   const animatedValue = useCountUp(value);
   const Icon = resolveIcon(iconName);
 
   return (
     <article
       aria-label={`${label}: ${value}${trend ? `. ${trend}` : ""}`}
-      className={`group relative overflow-hidden rounded-xl border p-4 transition-all duration-300 hover:-translate-y-1 hover:border-credicus-yellow/50 hover:shadow-glow ${
-        dark ? "ui-card-dark" : "ui-card"
-      }`}
+      className="group ui-card relative overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:border-credicus-primary/30 hover:shadow-md"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="pointer-events-none absolute inset-0 ui-shimmer opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-      <div className="pointer-events-none absolute -right-4 -top-4 h-20 w-20 rounded-full bg-credicus-yellow/5 transition-all duration-500 group-hover:scale-150 group-hover:bg-credicus-yellow/15" />
       <div className="relative flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-credicus-gray">{label}</p>
-          <p
-            className={`mt-2 text-2xl font-bold tabular-nums animate-count-up ${
-              dark ? "text-credicus-yellow" : "text-gray-900"
-            }`}
-            aria-hidden
-          >
+          <p className="text-xs font-semibold uppercase tracking-wide text-credicus-ink-muted">{label}</p>
+          <p className="mt-2 text-2xl font-bold tabular-nums text-credicus-ink animate-count-up" aria-hidden>
             {animatedValue}
           </p>
-          {trend ? <p className="mt-1 text-xs text-credicus-yellow">{trend}</p> : null}
+          {trend ? <p className="mt-1 text-xs font-medium text-credicus-primary">{trend}</p> : null}
         </div>
         <IconBadge
           icon={Icon}
-          variant={dark ? "dark" : "light"}
-          className="transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+          variant="primary"
+          className="transition-transform duration-300 group-hover:scale-105"
         />
       </div>
     </article>

@@ -4,34 +4,34 @@ import Container from "@/components/container";
 
 export default function SiteFooter() {
   return (
-    <footer className="border-t border-credicus-border bg-credicus-black">
+    <footer className="ui-site-chrome border-t border-white/10">
       <Container>
-        <div className="flex flex-col gap-6 py-10 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-8 py-10 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-3">
             <Logo size="sm" href="/" />
-            <p className="max-w-sm text-sm text-credicus-gray">
-              Recruitment CRM and growth partner for ambitious hiring teams.
+            <p className="max-w-sm text-sm leading-relaxed text-neutral-400">
+              Credicus Business — recruitment CRM and growth partner for ambitious hiring teams.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-credicus-gray-light">
-            <Link href="/about" className="transition hover:text-credicus-yellow">
-              About
-            </Link>
-            <Link href="/services" className="transition hover:text-credicus-yellow">
-              Services
-            </Link>
-            <Link href="/clients" className="transition hover:text-credicus-yellow">
-              Clients
-            </Link>
-            <Link href="/contact" className="transition hover:text-credicus-yellow">
-              Contact
-            </Link>
-            <Link href="/sign-in" className="transition hover:text-credicus-yellow">
-              Login
-            </Link>
-          </div>
+          <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+            {[
+              { href: "/about", label: "About" },
+              { href: "/services", label: "Services" },
+              { href: "/clients", label: "Clients" },
+              { href: "/contact", label: "Contact" },
+              { href: "/sign-in", label: "Login" },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="inline-flex min-h-[var(--touch-min)] items-center font-medium text-neutral-300 transition hover:text-credicus-yellow"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
         </div>
-        <div className="border-t border-credicus-border py-4 text-xs text-credicus-gray">
+        <div className="border-t border-white/10 py-4 text-xs text-neutral-500">
           © {new Date().getFullYear()} Credicus. All rights reserved.
         </div>
       </Container>

@@ -19,8 +19,8 @@ export default function DemoAccountPicker({ activeEmail, isLoading, onSelect }: 
   return (
     <div className="space-y-3 animate-fade-in">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-credicus-gray">Quick demo login</p>
-        <span className="rounded-full bg-credicus-yellow/20 px-2 py-0.5 text-[10px] font-semibold text-credicus-black">
+        <p className="text-xs font-semibold uppercase tracking-wide text-credicus-ink-muted">Quick demo login</p>
+        <span className="rounded-full bg-credicus-primary-light px-2 py-0.5 text-[10px] font-semibold text-credicus-ink">
           One tap
         </span>
       </div>
@@ -37,29 +37,27 @@ export default function DemoAccountPicker({ activeEmail, isLoading, onSelect }: 
               style={{ animationDelay: `${index * 80}ms` }}
               aria-pressed={isActive}
               aria-label={`Sign in as ${account.roleLabel}: ${account.name}`}
-              className={`group w-full min-h-[var(--touch-comfortable)] rounded-xl border p-3 text-left transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60 animate-fade-in-up ${
+              className={`group w-full min-h-[var(--touch-comfortable)] rounded-xl border p-3 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 animate-fade-in-up ${
                 isActive
-                  ? "border-credicus-yellow bg-credicus-yellow/10 shadow-glow ring-1 ring-credicus-yellow/40"
-                  : "border-gray-200 bg-gray-50 hover:-translate-y-0.5 hover:border-credicus-yellow/60 hover:bg-white hover:shadow-md"
+                  ? "border-credicus-primary bg-credicus-primary-soft shadow-md ring-2 ring-credicus-primary/20"
+                  : "border-credicus-line-subtle bg-credicus-surface hover:border-credicus-primary/40 hover:bg-white hover:shadow-sm"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-gray-900 transition-colors group-hover:text-credicus-black">
+                  <p className="truncate text-sm font-semibold text-credicus-ink transition-colors group-hover:text-credicus-primary">
                     {account.name}
                   </p>
-                  <p className="truncate text-xs text-credicus-gray">{account.email}</p>
+                  <p className="truncate text-xs text-credicus-ink-muted">{account.email}</p>
                 </div>
-                <span className={`shrink-0 transition-transform group-hover:scale-105 ${roleStyles[account.role]}`}>
-                  {account.roleLabel}
-                </span>
+                <span className={`shrink-0 ${roleStyles[account.role]}`}>{account.roleLabel}</span>
               </div>
-              <p className="mt-1.5 text-xs text-gray-600">{account.description}</p>
-              <p className="mt-2 flex items-center justify-between text-[11px] font-medium text-credicus-gray transition group-hover:text-gray-800">
+              <p className="mt-1.5 text-xs text-credicus-ink-secondary">{account.description}</p>
+              <p className="mt-2 flex items-center justify-between text-[11px] font-medium text-credicus-ink-muted">
                 <span>
-                  Password: <span className="font-mono text-gray-800">{account.password}</span>
+                  Password: <span className="font-mono text-credicus-ink-secondary">{account.password}</span>
                 </span>
-                <ArrowRight className="h-3.5 w-3.5 translate-x-0 opacity-70 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
               </p>
             </button>
           );

@@ -47,7 +47,7 @@ export default function Breadcrumbs({ dashboardRoot = "/dashboard" }: Breadcrumb
     <nav aria-label="Breadcrumb" className="mb-4 text-xs text-credicus-gray sm:text-sm">
       <ol className="flex flex-wrap items-center gap-2">
         <li>
-          <Link href={dashboardRoot} className="inline-flex min-h-[2rem] items-center transition hover:text-credicus-yellow">
+          <Link href={dashboardRoot} className="inline-flex min-h-[2rem] items-center transition hover:text-credicus-accent">
             Dashboard
           </Link>
         </li>
@@ -60,13 +60,13 @@ export default function Breadcrumbs({ dashboardRoot = "/dashboard" }: Breadcrumb
                 /
               </span>
               {isLast ? (
-                <span className="font-medium text-credicus-yellow" aria-current="page">
+                <span className="font-medium text-credicus-accent" aria-current="page">
                   {normalizeLabel(segment)}
                 </span>
               ) : (
                 <Link
                   href={href}
-                  className="inline-flex min-h-[2rem] items-center transition hover:text-credicus-yellow"
+                  className="inline-flex min-h-[2rem] items-center transition hover:text-credicus-accent"
                 >
                   {normalizeLabel(segment)}
                 </Link>

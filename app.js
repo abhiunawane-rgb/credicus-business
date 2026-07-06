@@ -38,7 +38,8 @@ function wireNodeModules() {
 }
 
 const standaloneServer = path.join(dir, ".next", "standalone", "server.js");
-if (fs.existsSync(standaloneServer)) {
+const useStandalone = process.env.CREDICUS_STANDALONE === "true" && fs.existsSync(standaloneServer);
+if (useStandalone) {
   log("starting standalone server");
   process.chdir(path.join(dir, ".next", "standalone"));
   process.env.HOSTNAME = host;

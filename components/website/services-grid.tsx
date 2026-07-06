@@ -36,7 +36,7 @@ export default function ServicesGrid() {
             size="lg"
             className="mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
           />
-          <h3 className="text-lg font-semibold text-gray-900 transition-colors group-hover:text-credicus-black">
+          <h3 className="text-lg font-semibold text-credicus-ink transition-colors group-hover:text-credicus-yellow">
             {service.title}
           </h3>
           <p className="mt-2 text-sm text-credicus-gray">{service.description}</p>

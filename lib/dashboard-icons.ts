@@ -1,13 +1,17 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
+  Briefcase,
+  Calendar,
   Database,
   FileSpreadsheet,
   FileText,
   Headphones,
+  LayoutGrid,
   Phone,
   Send,
   Shield,
+  User,
   UserCheck,
   UserCog,
   UserPlus,
@@ -27,6 +31,10 @@ export const dashboardIcons = {
   userCog: UserCog,
   headphones: Headphones,
   userCheck: UserCheck,
+  layoutGrid: LayoutGrid,
+  briefcase: Briefcase,
+  user: User,
+  calendar: Calendar,
 } as const satisfies Record<string, LucideIcon>;
 
 export type DashboardIconName = keyof typeof dashboardIcons;

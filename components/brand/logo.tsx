@@ -13,6 +13,7 @@ const sizeMap = {
   lg: { width: 220, height: 58, className: "h-12 w-auto sm:h-14" },
 };
 
+/** Original logo PNG — use on black header/footer so background merges */
 export default function Logo({ href = "/", size = "md", className = "" }: LogoProps) {
   const dimensions = sizeMap[size];
 

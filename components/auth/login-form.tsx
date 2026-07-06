@@ -5,12 +5,12 @@ import DemoAccountPicker from "@/components/auth/demo-account-picker";
 import Alert from "@/components/ui/alert";
 import Button from "@/components/ui/button";
 import { Field, FieldInput } from "@/components/ui/field";
+import PasswordInput from "@/components/ui/password-input";
 import { type DemoAccount } from "@/lib/demo-accounts";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -80,7 +80,7 @@ export default function LoginForm() {
     return (
       <div className="flex items-center justify-center py-12" role="status" aria-live="polite">
         <span className="inline-flex items-center gap-2 text-sm text-credicus-gray">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-credicus-gray/30 border-t-credicus-black" />
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-credicus-primary/30 border-t-credicus-primary" />
           Checking your session...
         </span>
       </div>
@@ -111,35 +111,24 @@ export default function LoginForm() {
         </Field>
 
         <Field id="password" label="Password" required>
-          <div className="relative">
-            <FieldInput
-              id="password"
-              type={showPassword ? "text" : "password"}
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="pr-24"
-              placeholder="Enter your password"
-              disabled={isLoading}
-              invalid={Boolean(error)}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-1 top-1/2 inline-flex min-h-[2.25rem] min-w-[2.25rem] -translate-y-1/2 items-center justify-center rounded-md px-3 text-xs font-medium text-credicus-gray transition hover:bg-gray-100 hover:text-gray-900"
-              disabled={isLoading}
-              aria-pressed={showPassword}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? "Hide" : "Show"}
-            </button>
-          </div>
+          <PasswordInput
+            id="password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Enter your password"
+            disabled={isLoading}
+            invalid={Boolean(error)}
+          />
         </Field>
 
         {error ? (
           <Alert variant="error" title="Sign-in failed" live="assertive">
             {error}
+            <span className="mt-2 block text-xs font-normal opacity-90">
+              Tip: pick a demo role below, or check your email and password and try again.
+            </span>
           </Alert>
         ) : null}
 
@@ -156,10 +145,10 @@ export default function LoginForm() {
 
       <div className="relative" role="separator" aria-label="Demo account options">
         <div className="absolute inset-0 flex items-center" aria-hidden>
-          <div className="w-full border-t border-gray-200" />
+          <div className="w-full border-t border-credicus-line-subtle" />
         </div>
         <div className="relative flex justify-center text-xs uppercase tracking-wide">
-          <span className="bg-white px-3 text-credicus-gray">Or try a demo account</span>
+          <span className="bg-white px-3 text-credicus-ink-muted">Or try a demo account</span>
         </div>
       </div>
 

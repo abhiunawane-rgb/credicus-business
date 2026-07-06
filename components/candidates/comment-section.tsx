@@ -56,13 +56,11 @@ export default function CommentSection({
   }
 
   return (
-    <div className={isDark ? "text-gray-100" : "text-gray-900"}>
+    <div className={isDark ? "text-gray-100" : "text-credicus-ink"}>
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className={`mb-3 inline-flex items-center gap-2 rounded-lg px-2 py-1 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 active:scale-95 ${
-          isDark ? "text-credicus-yellow hover:bg-credicus-yellow/10" : "text-credicus-black hover:bg-credicus-yellow/10"
-        }`}
+        className="mb-3 inline-flex min-h-[2.25rem] items-center gap-2 rounded-lg px-2 py-1 text-sm font-medium text-credicus-primary transition-colors hover:bg-credicus-primary-soft"
       >
         <MessageSquare className={`h-4 w-4 transition-transform ${expanded ? "scale-110" : ""}`} />
         {comments.length} comment{comments.length === 1 ? "" : "s"}
@@ -70,11 +68,7 @@ export default function CommentSection({
       </button>
 
       {expanded ? (
-        <div
-          className={`animate-dropdown-in space-y-4 rounded-xl border p-4 ${
-            isDark ? "border-credicus-border bg-credicus-black/50" : "border-gray-200 bg-gray-50"
-          }`}
-        >
+        <div className="animate-dropdown-in space-y-4 rounded-xl border border-credicus-line-subtle bg-credicus-surface p-4">
           <div className="flex gap-3">
             <div className="ui-avatar h-9 w-9 text-sm">
               {currentUserEmail ? currentUserEmail.charAt(0).toUpperCase() : "C"}
@@ -85,7 +79,7 @@ export default function CommentSection({
                 onChange={(e) => setContent(e.target.value)}
                 rows={2}
                 placeholder="Type your comment here"
-                className={isDark ? "ui-input-dark" : "ui-input"}
+                className="ui-input"
               />
               <button
                 type="button"
@@ -100,7 +94,7 @@ export default function CommentSection({
 
           <ul className="space-y-3">
             {comments.length === 0 ? (
-              <li className={`text-sm ${isDark ? "text-credicus-gray" : "text-gray-500"}`}>
+              <li className={`text-sm ${isDark ? "text-credicus-gray" : "text-credicus-ink-muted"}`}>
                 No comments yet. Add the first log entry.
               </li>
             ) : (
@@ -115,7 +109,7 @@ export default function CommentSection({
                   </div>
                   <div>
                     <p className={`text-sm ${isDark ? "text-gray-200" : "text-gray-800"}`}>{comment.content}</p>
-                    <p className={`mt-0.5 text-xs ${isDark ? "text-credicus-gray" : "text-gray-500"}`}>
+                    <p className={`mt-0.5 text-xs ${isDark ? "text-credicus-gray" : "text-credicus-ink-muted"}`}>
                       by {comment.author_email === currentUserEmail ? "You" : comment.author_name} ·{" "}
                       {formatDate(comment.created_at)}
                     </p>

@@ -2,9 +2,12 @@
 
 import { UserPlus } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
+import { useActionFeedback } from "@/components/providers/action-feedback-provider";
 import type { EmployeeRecord } from "@/lib/candidate-types";
+import { actionMessages } from "@/lib/action-messages";
 
 export default function EmployeeForm() {
+  const { notify } = useActionFeedback();
   const [employees, setEmployees] = useState<EmployeeRecord[]>([]);
   const [form, setForm] = useState({
     employee_code: "",
@@ -17,7 +20,6 @@ export default function EmployeeForm() {
     joining_date: "",
     status: "active",
   });
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -35,7 +37,6 @@ export default function EmployeeForm() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setMessage("");
     try {
       const res = await fetch("/api/employees", {
         method: "POST",
@@ -48,7 +49,7 @@ export default function EmployeeForm() {
         setError(body.error ?? "Failed to add employee.");
         return;
       }
-      setMessage("Employee added successfully.");
+      notify.success(actionMessages.saved, "Employee added");
       setForm({
         employee_code: "",
         first_name: "",
@@ -100,7 +101,6 @@ export default function EmployeeForm() {
         <button type="submit" disabled={loading} className="ui-button-primary">
           {loading ? "Saving..." : "Save Employee"}
         </button>
-        {message ? <p className="ui-alert-success-dark">{message}</p> : null}
         {error ? <p className="ui-alert-error-dark">{error}</p> : null}
       </form>
 
@@ -108,7 +108,7 @@ export default function EmployeeForm() {
         <h4 className="mb-3 font-semibold">Employee Records</h4>
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="border-b border-credicus-border text-credicus-gray">
+            <tr className="border-b border-credicus-line-default text-credicus-gray">
               <th className="px-2 py-2 text-left">Code</th>
               <th className="px-2 py-2 text-left">Name</th>
               <th className="px-2 py-2 text-left">Department</th>
@@ -118,7 +118,7 @@ export default function EmployeeForm() {
           </thead>
           <tbody>
             {employees.map((emp) => (
-              <tr key={emp.id} className="border-b border-credicus-border/60">
+              <tr key={emp.id} className="border-b border-credicus-line-default/60">
                 <td className="px-2 py-2">{emp.employee_code ?? "—"}</td>
                 <td className="px-2 py-2">
                   {emp.first_name} {emp.last_name}

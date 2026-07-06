@@ -19,21 +19,21 @@ export default async function DashboardSettingsPage() {
   return (
     <section className="space-y-6">
       <div className="flex items-start gap-4">
-        <IconBadge icon={User} variant="dark" size="lg" />
+        <IconBadge icon={User} variant="light" size="lg" />
         <div>
-          <h3 className="text-xl font-semibold text-white sm:text-2xl">Settings</h3>
-          <p className="text-credicus-gray-light">Manage your session and account context.</p>
+          <h3 className="text-xl font-semibold text-credicus-ink sm:text-2xl">Settings</h3>
+          <p className="text-credicus-gray">Manage your session and account context.</p>
         </div>
       </div>
 
-      <div className="ui-card-dark p-6">
-        <div className="flex items-center gap-4 border-b border-credicus-border pb-5">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-credicus-yellow/15 text-xl font-bold text-credicus-yellow">
+      <div className="ui-card p-6">
+        <div className="flex items-center gap-4 border-b border-credicus-line-default pb-5">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-credicus-primary-light text-xl font-bold text-credicus-primary">
             {session.email.charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="font-semibold text-white">{session.email}</p>
-            <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-credicus-yellow/30 bg-credicus-yellow/10 px-2.5 py-0.5 text-xs font-medium text-credicus-yellow">
+            <p className="font-semibold text-credicus-ink">{session.email}</p>
+            <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-credicus-primary/30 bg-credicus-primary-light px-2.5 py-0.5 text-xs font-medium text-credicus-primary">
               <Shield className="h-3 w-3" />
               {roleLabels[session.role] ?? session.role}
             </span>
@@ -41,18 +41,18 @@ export default async function DashboardSettingsPage() {
         </div>
 
         <div className="mt-5 space-y-3">
-          <div className="flex items-center gap-3 rounded-lg border border-credicus-border bg-credicus-black/50 px-4 py-3">
+          <div className="flex items-center gap-3 rounded-lg border border-credicus-line-default bg-credicus-surface px-4 py-3">
             <Mail className="h-4 w-4 text-credicus-gray" />
             <div>
               <p className="text-xs text-credicus-gray">Email</p>
-              <p className="text-sm text-gray-100">{session.email}</p>
+              <p className="text-sm text-credicus-ink">{session.email}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 rounded-lg border border-credicus-border bg-credicus-black/50 px-4 py-3">
+          <div className="flex items-center gap-3 rounded-lg border border-credicus-line-default bg-credicus-surface px-4 py-3">
             <Shield className="h-4 w-4 text-credicus-gray" />
             <div>
               <p className="text-xs text-credicus-gray">Role</p>
-              <p className="text-sm text-gray-100">{roleLabels[session.role] ?? session.role}</p>
+              <p className="text-sm text-credicus-ink">{roleLabels[session.role] ?? session.role}</p>
             </div>
           </div>
         </div>

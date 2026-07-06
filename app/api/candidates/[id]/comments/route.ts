@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { addComment, listComments } from "@/lib/candidate-service";
+import { displayNameForEmail } from "@/lib/demo-accounts";
 import { requireRequestRole, unauthorizedResponse } from "@/lib/request-auth";
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -31,7 +32,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
   const data = await addComment(id, body.content.trim(), {
     id: session.userId,
-    name: session.email.split("@")[0],
+    name: displayNameForEmail(session.email),
     email: session.email,
   });
   return NextResponse.json({ data }, { status: 201 });

@@ -14,7 +14,7 @@ export default function ClientsGrid() {
           className="ui-card-interactive group flex flex-col items-center gap-2 px-4 py-5 text-center opacity-0 animate-fade-in-up"
         >
           <Building2 className="h-6 w-6 text-credicus-yellow transition-transform duration-300 group-hover:scale-125" />
-          <span className="text-sm font-semibold text-credicus-gray transition-colors group-hover:text-gray-900">
+          <span className="text-sm font-semibold text-credicus-ink-secondary transition-colors group-hover:text-credicus-ink">
             {client}
           </span>
         </div>

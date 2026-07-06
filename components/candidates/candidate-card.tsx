@@ -13,7 +13,7 @@ import { useState } from "react";
 import CommentSection from "@/components/candidates/comment-section";
 import StageActions from "@/components/candidates/stage-actions";
 import type { CandidateRecord, CandidateStage, CommentRecord } from "@/lib/candidate-types";
-import { STAGE_LABELS } from "@/lib/candidate-types";
+import { displayCandidateName, STAGE_LABELS } from "@/lib/candidate-types";
 
 type CandidateCardProps = {
   candidate: CandidateRecord;
@@ -49,13 +49,14 @@ export default function CandidateCard({
   currentUserEmail,
   readOnly = false,
   commentsExpanded = false,
-  variant = "dark",
+  variant = "light",
   onStageChange,
   onAddComment,
   onDelete,
 }: CandidateCardProps) {
   const [busy, setBusy] = useState(false);
   const isDark = variant === "dark";
+  const displayName = displayCandidateName(candidate);
 
   async function handleStage(stage: CandidateStage, rejectionReason?: string) {
     if (readOnly) return;
@@ -69,7 +70,7 @@ export default function CandidateCard({
 
   return (
     <article
-      className={`group/card overflow-hidden hover:-translate-y-0.5 hover:border-credicus-yellow/40 hover:shadow-glow ${
+      className={`group/card relative overflow-visible hover:-translate-y-0.5 hover:border-credicus-yellow/40 hover:shadow-glow ${
         isDark ? "ui-panel-dark" : "ui-panel-light"
       }`}
     >
@@ -79,12 +80,12 @@ export default function CandidateCard({
             <input
               type="checkbox"
               className="mt-1.5 accent-credicus-yellow"
-              aria-label={`Select ${candidate.name}`}
+              aria-label={`Select ${displayName}`}
             />
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
-                  {candidate.name}
+                <h3 className="text-lg font-semibold text-credicus-ink">
+                  {displayName}
                 </h3>
                 {candidate.status === "shortlisted" ? (
                   <span className="ui-badge-success">Recommended</span>
@@ -143,64 +144,65 @@ export default function CandidateCard({
 
         <div
           className={`flex flex-col items-center gap-3 px-2 lg:border-l lg:pl-4 ${
-            isDark ? "border-credicus-border" : "border-gray-100"
+            isDark ? "border-credicus-line-default" : "border-gray-100"
           }`}
         >
           <div className="ui-avatar h-14 w-14 text-lg transition-transform duration-300 group-hover/card:scale-105">
-            {initials(candidate.name)}
+            {initials(displayName)}
           </div>
           <p className={`max-w-[180px] text-center text-xs ${isDark ? "text-credicus-gray-light" : "text-credicus-gray"}`}>
             {candidate.process ? `${candidate.process} · ` : ""}
             Stage:{" "}
-            <span className={`font-medium ${isDark ? "text-credicus-yellow" : "text-credicus-black"}`}>
+            <span className="font-medium text-credicus-primary">
               {STAGE_LABELS[candidate.status]}
             </span>
           </p>
           <div
             className={`flex overflow-hidden rounded-full border text-xs shadow-sm ${
-              isDark ? "border-credicus-border" : "border-gray-200"
+              isDark ? "border-credicus-line-default" : "border-credicus-line-subtle"
             }`}
           >
-            <button
-              type="button"
+            <a
+              href={`tel:${candidate.mobile}`}
               className={`inline-flex items-center gap-1 px-3 py-1.5 font-medium transition-colors active:scale-95 ${
                 isDark
                   ? "bg-credicus-yellow/15 text-credicus-yellow hover:bg-credicus-yellow/25"
-                  : "bg-credicus-yellow/15 text-credicus-black hover:bg-credicus-yellow/25"
+                  : "bg-credicus-yellow-soft text-credicus-ink hover:bg-credicus-yellow-muted"
               }`}
             >
               <Phone className="h-3.5 w-3.5" />
-              Contact
-            </button>
-            <button
-              type="button"
-              className={`border-l px-3 py-1.5 transition-colors active:scale-95 ${
-                isDark
-                  ? "border-credicus-border text-credicus-gray-light hover:bg-white/5"
-                  : "border-gray-200 text-credicus-gray hover:bg-gray-50"
-              }`}
-            >
-              Status
-            </button>
+              {candidate.mobile}
+            </a>
           </div>
-          <button
-            type="button"
-            className="ui-button-primary inline-flex w-full items-center justify-center gap-2 rounded-full px-4 py-2 text-xs"
-          >
-            <Phone className="h-3.5 w-3.5" />
-            Call from app →
-          </button>
         </div>
 
         <div
           className={`flex flex-row gap-2 lg:flex-col lg:border-l lg:pl-3 ${
-            isDark ? "border-credicus-border" : "border-gray-100"
+            isDark ? "border-credicus-line-default" : "border-gray-100"
           }`}
         >
-          <button type="button" className="ui-icon-btn" aria-label="Email">
-            <Mail className="h-4 w-4" />
-          </button>
-          <button type="button" className="ui-icon-btn" aria-label="Share">
+          {candidate.email ? (
+            <a
+              href={`mailto:${candidate.email}`}
+              className="ui-icon-btn inline-flex"
+              aria-label={`Email ${displayName}`}
+            >
+              <Mail className="h-4 w-4" />
+            </a>
+          ) : (
+            <span className="ui-icon-btn inline-flex opacity-40" aria-hidden>
+              <Mail className="h-4 w-4" />
+            </span>
+          )}
+          <button
+            type="button"
+            className="ui-icon-btn"
+            aria-label="Share"
+            onClick={() => {
+              const url = `${window.location.origin}/dashboard/recruiter/candidates/${candidate.id}`;
+              void navigator.clipboard?.writeText(url);
+            }}
+          >
             <Share2 className="h-4 w-4" />
           </button>
           {!readOnly && onDelete ? (
@@ -212,7 +214,7 @@ export default function CandidateCard({
       </div>
 
       <div
-        className={`border-t px-4 py-3 ${isDark ? "border-credicus-border bg-credicus-black/40" : "border-gray-100 bg-gray-50/80"}`}
+        className="border-t border-credicus-line-subtle bg-credicus-surface/80 px-4 py-3"
       >
         <CommentSection
           candidateId={candidate.id}
@@ -226,8 +228,8 @@ export default function CandidateCard({
 
       {!readOnly ? (
         <div
-          className={`flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 ${
-            isDark ? "border-credicus-border" : "border-gray-100"
+          className={`relative z-10 flex flex-wrap items-center justify-between gap-3 overflow-visible border-t px-4 py-3 ${
+            isDark ? "border-credicus-line-default" : "border-gray-100"
           }`}
         >
           <p className={`text-xs ${isDark ? "text-credicus-gray-light" : "text-credicus-gray"}`}>

@@ -17,7 +17,7 @@ function SummarySkeleton() {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="ui-card-dark h-24 p-4">
+        <div key={i} className="ui-card h-24 p-4">
           <div className="ui-skeleton mb-3 h-3 w-20" />
           <div className="ui-skeleton h-8 w-12" />
         </div>

@@ -22,26 +22,26 @@ const stats = [
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
-      <aside className="relative flex flex-col justify-between overflow-hidden bg-credicus-black px-6 py-8 text-white sm:px-10 lg:w-[44%] lg:px-12 lg:py-12">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-credicus-yellow/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-credicus-yellow/5 blur-3xl" />
-        <div className="pointer-events-none absolute right-10 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full border border-credicus-yellow/10" />
+      <aside className="relative flex flex-col justify-between overflow-hidden border-b border-credicus-line-subtle bg-gradient-to-br from-credicus-yellow-soft via-white to-credicus-primary-soft px-6 py-8 sm:px-10 lg:w-[44%] lg:border-b-0 lg:border-r lg:px-12 lg:py-12">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-credicus-yellow/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-credicus-yellow/10 blur-3xl" />
+
+        <div className="ui-site-chrome -mx-6 mb-8 px-6 py-6 sm:-mx-10 sm:px-10 lg:-mx-12 lg:-mt-12 lg:px-12 lg:pt-12">
+          <Logo size="lg" href="/" />
+        </div>
 
         <div className="relative space-y-10">
-          <Logo size="lg" href="/" />
           <div className="space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-widest text-credicus-yellow">
-              Recruitment workspace
+            <p className="text-xs font-semibold uppercase tracking-widest text-credicus-ink-muted">
+              Credicus Business
             </p>
-            <h1 className="text-2xl font-bold leading-tight sm:text-4xl">
+            <h1 className="text-2xl font-bold leading-tight text-credicus-ink sm:text-4xl">
               Hire smarter with{" "}
-              <span className="bg-gradient-to-r from-credicus-yellow to-credicus-yellow-hover bg-clip-text text-transparent">
-                Credicus CRM
-              </span>
+              <span className="text-credicus-yellow">Credicus Business</span>
             </h1>
-            <p className="max-w-md text-sm leading-relaxed text-credicus-gray-light sm:text-base">
-              Sign in to access your recruitment dashboard, track performance, and move candidates
-              through your hiring funnel faster.
+            <p className="max-w-md text-sm leading-relaxed text-credicus-ink-secondary sm:text-base">
+              Sign in to access your recruitment dashboard, track performance, and move candidates through your hiring
+              funnel faster.
             </p>
           </div>
 
@@ -49,10 +49,10 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
             {stats.map((stat) => (
               <div
                 key={stat.label}
-                className="rounded-xl border border-credicus-border bg-white/5 px-3 py-3 backdrop-blur-sm transition hover:border-credicus-yellow/30"
+                className="rounded-xl border border-credicus-line-subtle bg-white px-3 py-3 shadow-sm transition hover:border-credicus-yellow/50"
               >
                 <p className="text-lg font-bold text-credicus-yellow sm:text-xl">{stat.value}</p>
-                <p className="text-[11px] text-credicus-gray-light">{stat.label}</p>
+                <p className="text-[11px] text-credicus-ink-muted">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -63,14 +63,14 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
               return (
                 <li
                   key={item.title}
-                  className="flex items-start gap-3 rounded-lg border border-credicus-border/60 bg-white/5 p-3 transition hover:border-credicus-yellow/30 hover:bg-white/10"
+                  className="flex items-start gap-3 rounded-xl border border-credicus-line-subtle bg-white p-3 shadow-sm transition hover:border-credicus-yellow/40"
                 >
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-credicus-yellow/15 text-credicus-yellow">
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-credicus-yellow-soft text-credicus-yellow">
                     <Icon className="h-4 w-4" />
                   </span>
                   <div>
-                    <p className="text-sm font-semibold text-white">{item.title}</p>
-                    <p className="text-xs text-credicus-gray-light">{item.detail}</p>
+                    <p className="text-sm font-semibold text-credicus-ink">{item.title}</p>
+                    <p className="text-xs text-credicus-ink-secondary">{item.detail}</p>
                   </div>
                 </li>
               );
@@ -78,9 +78,9 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           </ul>
         </div>
 
-        <p className="relative mt-8 text-xs text-credicus-gray">
+        <p className="relative mt-8 text-xs text-credicus-ink-muted">
           Need help?{" "}
-          <Link href="/contact" className="text-credicus-yellow transition hover:underline">
+          <Link href="/contact" className="font-medium text-credicus-ink transition hover:text-credicus-yellow">
             Contact our team
           </Link>
         </p>
@@ -88,13 +88,13 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
 
       <main
         id="main-content"
-        className="relative flex flex-1 items-center justify-center overflow-hidden bg-gradient-to-br from-gray-50 via-white to-credicus-yellow-muted/20 px-6 py-10 sm:px-10"
+        className="relative flex flex-1 items-center justify-center overflow-hidden bg-credicus-chrome px-6 py-10 sm:px-10"
       >
-        <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 rounded-full bg-credicus-yellow/10 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 left-0 h-48 w-48 rounded-full bg-credicus-yellow/5 blur-3xl" />
+        <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 rounded-full bg-credicus-yellow/15 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 left-0 h-48 w-48 rounded-full bg-credicus-yellow/10 blur-3xl" />
 
         <div className="relative w-full max-w-md">
-          <div className="animate-scale-in rounded-2xl border border-gray-200/80 bg-white/90 p-8 shadow-brand-lg backdrop-blur-sm transition-all duration-300 hover:border-credicus-yellow/30 hover:shadow-glow-lg sm:p-10">
+          <div className="animate-scale-in rounded-2xl border border-credicus-line-subtle bg-white p-8 shadow-lg sm:p-10">
             {children}
           </div>
         </div>

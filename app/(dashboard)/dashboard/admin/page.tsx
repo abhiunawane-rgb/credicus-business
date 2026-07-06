@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { BarChart3, Database, UserPlus } from "lucide-react";
+import { BarChart3, Database, UserCog, UserPlus } from "lucide-react";
 import AdminPanel from "@/components/admin/admin-panel";
 import ClientSummaryTable from "@/components/dashboard/client-summary-table";
 import RecruiterSummaryTable from "@/components/dashboard/recruiter-summary-table";
@@ -24,7 +24,7 @@ export default async function AdminDashboardPage() {
         iconName="shield"
         title="Admin Dashboard"
         description="Manage users, role assignments, data movement, and system controls in one place."
-        tip="Offline password reset: go to Manage Users → Reset Password → share the new password securely with the user."
+        tip="User management: go to Users in the sidebar to add accounts, set roles, activate/deactivate, reset passwords, or delete users."
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -35,7 +35,8 @@ export default async function AdminDashboardPage() {
 
       <TodaySummary />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <ActionCard href="/dashboard/admin/users" title="User Management" description="Create users, set user type, edit, change roles, and remove accounts." icon={UserCog} />
         <ActionCard href="/dashboard/admin/employees" title="Employee Data" description="Add and manage internal employee records." icon={UserPlus} />
         <ActionCard href="/dashboard/admin/talentpool" title="Talent Pool" description="View all candidates across recruiters." icon={Database} />
         <ActionCard href="/dashboard/admin/reports" title="Reports" description="Month-wise hiring data and performance tables." icon={BarChart3} />

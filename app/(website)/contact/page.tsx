@@ -30,7 +30,7 @@ export default function ContactPage() {
                   <IconBadge icon={item.icon} variant="light" />
                   <div>
                     <p className="text-xs font-medium uppercase tracking-wide text-credicus-gray">{item.label}</p>
-                    <p className="mt-0.5 text-sm font-semibold text-gray-900">{item.value}</p>
+                    <p className="mt-0.5 text-sm font-semibold text-credicus-ink">{item.value}</p>
                   </div>
                 </div>
               ))}

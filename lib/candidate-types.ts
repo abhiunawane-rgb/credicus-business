@@ -74,6 +74,67 @@ export const STAGE_LABELS: Record<CandidateStage, string> = {
   hold: "Hold",
 };
 
+/** Application status labels shown in Candidate Status table */
+export const APPLICATION_STATUS_LABELS: Record<CandidateStage, string> = {
+  new: "Request Submitted",
+  screening: "Under Screening",
+  maybe: "Under Review",
+  interviewed: "Interview Scheduled",
+  shortlisted: "Shortlisted",
+  offered: "Offer Extended",
+  hired: "Joined",
+  rejected: "Rejected",
+  hold: "On Hold",
+};
+
+export function applicantDisplayId(id: string, index: number): string {
+  const digits = id.replace(/\D/g, "");
+  if (digits.length >= 4) return digits.slice(-6).padStart(6, "0");
+  return String(712100 + index + 1);
+}
+
+/** Avoid duplicated full names such as "Karan Iyer Karan Iyer" in legacy imports. */
+export function displayCandidateName(
+  candidate: Pick<CandidateRecord, "name" | "first_name" | "last_name">,
+): string {
+  const first = candidate.first_name?.trim() ?? "";
+  const last = candidate.last_name?.trim() ?? "";
+  const fromParts = [first, last].filter(Boolean).join(" ").trim();
+  let name = candidate.name?.trim() ?? "";
+
+  if (first && last && first === last) {
+    return first;
+  }
+
+  if (fromParts && name === `${fromParts} ${fromParts}`) {
+    return fromParts;
+  }
+
+  if (!name && fromParts) {
+    return fromParts;
+  }
+
+  const words = name.split(/\s+/).filter(Boolean);
+  if (words.length >= 2 && words.length % 2 === 0) {
+    const mid = words.length / 2;
+    const firstHalf = words.slice(0, mid).join(" ");
+    const secondHalf = words.slice(mid).join(" ");
+    if (firstHalf === secondHalf) {
+      return firstHalf;
+    }
+  }
+
+  return name || fromParts;
+}
+
+export function normalizeCandidateRecord(candidate: CandidateRecord): CandidateRecord {
+  const name = displayCandidateName(candidate);
+  if (name === candidate.name) {
+    return candidate;
+  }
+  return { ...candidate, name };
+}
+
 export const STAGE_QUICK_ACTIONS = [
   { key: "shortlisted" as const, label: "Shortlist", color: "yellow" },
   { key: "maybe" as const, label: "Maybe", color: "gray" },
@@ -99,4 +160,4 @@ export const SOURCE_OPTIONS = [
   { value: "other", label: "Other" },
 ];
 
-export const CLIENT_COMPANIES = ["Eureka", "Altruist", "OPO", "FinEdge", "NorthBridge", "BluePeak"];
+export const CLIENT_COMPANIES = ["NovaCorp", "GreenLeaf", "Summit HR", "TechBridge", "Horizon Staffing", "BlueRidge"];

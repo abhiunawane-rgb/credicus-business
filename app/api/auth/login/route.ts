@@ -51,10 +51,13 @@ export async function POST(request: Request) {
   try {
     const dbUser = await prisma.user.findUnique({
       where: { email },
-      select: { id: true, email: true, password: true, role: true },
+      select: { id: true, email: true, password: true, role: true, status: true },
     });
 
     if (dbUser && verifyPassword(password, dbUser.password)) {
+      if (dbUser.status === "inactive") {
+        return NextResponse.json({ error: "Your account is inactive. Contact an administrator." }, { status: 403 });
+      }
       return loginSuccessResponse(request, dbUser);
     }
   } catch {

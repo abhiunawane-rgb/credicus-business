@@ -135,8 +135,8 @@ export default function DashboardNav({ role }: DashboardNavProps) {
       "relative inline-flex min-h-[var(--touch-min)] items-center whitespace-nowrap rounded-lg px-3 text-sm font-medium transition-all duration-200",
       compact ? "text-xs sm:text-sm" : "text-sm",
       active
-        ? "bg-credicus-yellow text-credicus-black shadow-glow"
-        : "text-credicus-gray-light hover:bg-white/5 hover:text-white",
+        ? "bg-credicus-primary text-credicus-ink shadow-sm"
+        : "text-credicus-gray-dark hover:bg-credicus-primary-light hover:text-credicus-primary",
     ].join(" ");
   }
 
@@ -144,7 +144,7 @@ export default function DashboardNav({ role }: DashboardNavProps) {
     <div className="mb-6 space-y-2">
       <nav
         aria-label="Dashboard"
-        className="rounded-xl border border-credicus-border bg-credicus-card p-1.5 shadow-brand"
+        className="rounded-xl border border-credicus-line-default bg-white p-1.5 shadow-sm"
       >
         <div className="hidden items-center gap-1 lg:flex">
           {groups.map((group, groupIndex) => (
@@ -201,7 +201,7 @@ export default function DashboardNav({ role }: DashboardNavProps) {
                 <div
                   id={menuId}
                   role="menu"
-                  className="absolute right-0 top-[calc(100%+0.35rem)] z-20 min-w-[11rem] animate-dropdown-in rounded-xl border border-credicus-border bg-credicus-card p-1.5 shadow-brand-lg"
+                  className="absolute right-0 top-[calc(100%+0.35rem)] z-20 min-w-[11rem] animate-dropdown-in rounded-xl border border-credicus-line-default bg-white p-1.5 shadow-lg"
                 >
                   {secondaryItems.map((item) => {
                     const active = isActive(pathname, item.href, allHrefs);
@@ -225,7 +225,7 @@ export default function DashboardNav({ role }: DashboardNavProps) {
       </nav>
 
       <p className="text-xs text-credicus-gray lg:sr-only">
-        Tip: use <strong className="text-credicus-gray-light">More</strong> for import, invitations, and resumes.
+        Tip: use <strong className="text-credicus-ink-secondary">More</strong> for import, invitations, and resumes.
       </p>
     </div>
   );

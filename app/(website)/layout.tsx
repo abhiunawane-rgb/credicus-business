@@ -8,7 +8,7 @@ type WebsiteLayoutProps = {
 
 export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
   return (
-    <div className="flex min-h-screen flex-col bg-[#f5f5f7]">
+    <div className="flex min-h-screen flex-col bg-credicus-chrome">
       <SiteNavbar />
       <main id="main-content" className="flex-1">
         {children}

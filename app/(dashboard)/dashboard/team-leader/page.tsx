@@ -5,7 +5,6 @@ import RecruiterSummaryTable from "@/components/dashboard/recruiter-summary-tabl
 import TodaySummary from "@/components/dashboard/today-summary";
 import LeadAssignmentWorkbench from "@/components/team-leader/lead-assignment-workbench";
 import ActionCard from "@/components/ui/action-card";
-import DashboardHeader from "@/components/ui/dashboard-header";
 import StatCard from "@/components/ui/stat-card";
 import { getAuthSession } from "@/lib/auth-session";
 
@@ -33,12 +32,6 @@ export default async function TeamLeaderDashboardPage() {
 
   return (
     <section className="space-y-6">
-      <DashboardHeader
-        iconName="users"
-        title="Team Leader Dashboard"
-        description="Monitor recruiter productivity, conversion funnel, and assign fresh leads to the team."
-      />
-
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Total Calls" value="223" iconName="phone" trend="+12% vs last week" />
         <StatCard label="Interviews" value="76" iconName="users" />

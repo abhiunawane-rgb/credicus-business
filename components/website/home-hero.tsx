@@ -10,23 +10,21 @@ export default function HomeHero() {
     <div className="grid items-center gap-12 lg:grid-cols-2">
       <div className="space-y-6">
         <AnimatedReveal delay={0}>
-          <span className="inline-flex items-center gap-2 rounded-full border border-credicus-yellow/30 bg-credicus-yellow/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-credicus-yellow">
-            <Sparkles className="h-3.5 w-3.5 animate-pulse-glow" />
-            Recruitment CRM + Growth Partner
+          <span className="inline-flex items-center gap-2 rounded-full border border-credicus-yellow/40 bg-credicus-yellow-soft px-3 py-1 text-xs font-semibold uppercase tracking-wide text-credicus-ink">
+            <Sparkles className="h-3.5 w-3.5" />
+            Recruitment CRM + Growth Partner · Credicus Business
           </span>
         </AnimatedReveal>
         <AnimatedReveal delay={100}>
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+          <h1 className="text-4xl font-bold tracking-tight text-credicus-ink sm:text-5xl">
             Build high-performing teams,{" "}
-            <span className="bg-gradient-to-r from-credicus-yellow to-credicus-yellow-hover bg-clip-text text-transparent">
-              faster than ever.
-            </span>
+            <span className="text-credicus-yellow">faster than ever.</span>
           </h1>
         </AnimatedReveal>
         <AnimatedReveal delay={200}>
-          <p className="text-lg text-credicus-gray-light">
-            Credicus helps ambitious companies hire the right talent and streamline their full
-            recruitment lifecycle with a modern CRM-led approach.
+          <p className="text-lg text-credicus-ink-secondary">
+            Credicus helps ambitious companies hire the right talent and streamline their full recruitment lifecycle with
+            a modern CRM-led approach.
           </p>
         </AnimatedReveal>
         <AnimatedReveal delay={300}>

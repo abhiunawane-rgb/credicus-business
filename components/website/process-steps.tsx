@@ -21,7 +21,7 @@ export default function ProcessSteps({ steps, dark = false }: ProcessStepsProps)
             key={step.title}
             style={{ animationDelay: `${index * 100}ms` }}
             className={`group relative h-full overflow-hidden rounded-xl border p-5 opacity-0 animate-fade-in-up transition-all duration-300 hover:-translate-y-1 hover:border-credicus-yellow/50 hover:shadow-glow ${
-              dark ? "border-credicus-border bg-credicus-card" : "ui-card"
+              dark ? "border-credicus-line-default bg-credicus-card" : "ui-card"
             }`}
           >
             <div className="pointer-events-none absolute inset-0 ui-shimmer opacity-0 transition-opacity group-hover:opacity-100" />
@@ -35,10 +35,8 @@ export default function ProcessSteps({ steps, dark = false }: ProcessStepsProps)
               </span>
               <span className="text-xs font-bold text-credicus-yellow">Step {index + 1}</span>
             </div>
-            <h3 className={`relative font-semibold ${dark ? "text-white" : "text-gray-900"}`}>{step.title}</h3>
-            <p className={`relative mt-2 text-sm ${dark ? "text-credicus-gray-light" : "text-credicus-gray"}`}>
-              {step.description}
-            </p>
+            <h3 className="relative font-semibold text-credicus-ink">{step.title}</h3>
+            <p className="relative mt-2 text-sm leading-relaxed text-credicus-ink-secondary">{step.description}</p>
           </div>
         );
       })}

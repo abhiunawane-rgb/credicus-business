@@ -6,6 +6,7 @@ import { Menu, X } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import Logo from "@/components/brand/logo";
 import Container from "@/components/container";
+
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
@@ -31,12 +32,12 @@ export default function SiteNavbar() {
   }, [menuOpen]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-credicus-border bg-credicus-black/95 shadow-brand backdrop-blur-md">
+    <header className="ui-site-chrome sticky top-0 z-40 border-b border-white/10">
       <Container>
-        <div className="flex min-h-16 items-center justify-between gap-3 py-3">
+        <div className="flex min-h-16 items-center justify-between gap-4 py-3">
           <Logo size="md" />
 
-          <nav aria-label="Primary" className="hidden items-center gap-1 text-sm font-medium md:flex">
+          <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
             {navLinks.map((link) => {
               const active = pathname === link.href;
               return (
@@ -44,7 +45,7 @@ export default function SiteNavbar() {
                   key={link.href}
                   href={link.href}
                   aria-current={active ? "page" : undefined}
-                  className={`ui-nav-link ${active ? "ui-nav-link-active" : "text-credicus-gray-light"}`}
+                  className={`ui-nav-link-dark ${active ? "ui-nav-link-dark-active" : ""}`}
                 >
                   {link.label}
                 </Link>
@@ -58,13 +59,13 @@ export default function SiteNavbar() {
             </Link>
             <button
               type="button"
-              className="inline-flex min-h-[var(--touch-min)] min-w-[var(--touch-min)] items-center justify-center rounded-md border border-credicus-border text-credicus-gray-light transition hover:border-credicus-yellow hover:text-credicus-yellow md:hidden"
+              className="ui-button-ghost-dark md:hidden"
               aria-expanded={menuOpen}
               aria-controls={menuId}
               aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
               onClick={() => setMenuOpen((open) => !open)}
             >
-              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {menuOpen ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
             </button>
           </div>
         </div>
@@ -74,14 +75,14 @@ export default function SiteNavbar() {
         <div className="fixed inset-0 top-16 z-30 md:hidden" role="presentation">
           <button
             type="button"
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/60"
             aria-label="Close menu overlay"
             onClick={() => setMenuOpen(false)}
           />
           <nav
             id={menuId}
             aria-label="Mobile primary"
-            className="relative border-t border-credicus-border bg-credicus-black px-4 py-4 shadow-brand-lg animate-dropdown-in"
+            className="ui-site-chrome relative animate-dropdown-in border-t border-white/10 px-4 py-4"
           >
             <ul className="space-y-1">
               {navLinks.map((link) => {
@@ -91,10 +92,10 @@ export default function SiteNavbar() {
                     <Link
                       href={link.href}
                       aria-current={active ? "page" : undefined}
-                      className={`flex min-h-[var(--touch-comfortable)] items-center rounded-lg px-4 text-base font-medium transition ${
+                      className={`flex min-h-[var(--touch-comfortable)] items-center rounded-xl px-4 text-base font-medium transition ${
                         active
-                          ? "bg-credicus-yellow/15 text-credicus-yellow"
-                          : "text-credicus-gray-light hover:bg-white/5 hover:text-white"
+                          ? "bg-white/10 font-semibold text-credicus-yellow"
+                          : "text-neutral-300 hover:bg-white/10 hover:text-white"
                       }`}
                     >
                       {link.label}
@@ -103,8 +104,8 @@ export default function SiteNavbar() {
                 );
               })}
             </ul>
-            <div className="mt-4 border-t border-credicus-border pt-4">
-              <Link href="/sign-in" className="ui-button-primary w-full">
+            <div className="mt-4 border-t border-white/10 pt-4">
+              <Link href="/sign-in" className="ui-button-primary w-full justify-center">
                 Sign in to workspace
               </Link>
             </div>

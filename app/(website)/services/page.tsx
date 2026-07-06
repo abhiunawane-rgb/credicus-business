@@ -64,7 +64,7 @@ export default function ServicesPage() {
               >
                 <IconBadge icon={service.icon} variant="light" size="lg" className="shrink-0" />
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">{service.title}</h2>
+                  <h2 className="text-xl font-semibold text-credicus-ink">{service.title}</h2>
                   <p className="mt-2 text-credicus-gray">{service.description}</p>
                 </div>
               </article>
@@ -72,7 +72,7 @@ export default function ServicesPage() {
           </div>
 
           <div>
-            <h2 className="mb-6 text-xl font-semibold text-gray-900">Our delivery process</h2>
+            <h2 className="mb-6 text-xl font-semibold text-credicus-ink">Our delivery process</h2>
             <ProcessSteps steps={deliverySteps} />
           </div>
         </div>

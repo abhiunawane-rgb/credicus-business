@@ -1,12 +1,25 @@
 export default function DashboardLoading() {
   return (
-    <div className="min-h-screen bg-slate-950 px-4 py-12 text-slate-100 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-4">
-        <div className="h-8 w-64 animate-pulse rounded bg-slate-800" />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="h-24 animate-pulse rounded-lg border border-slate-800 bg-slate-900" />
+    <div className="flex min-h-screen bg-credicus-surface">
+      <div className="hidden w-64 shrink-0 border-r border-credicus-line-default bg-white lg:block">
+        <div className="space-y-4 p-4">
+          <div className="ui-skeleton h-8 w-24" />
+          <div className="ui-skeleton h-10 w-full" />
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="ui-skeleton h-10 w-full" />
           ))}
+        </div>
+      </div>
+      <div className="flex-1">
+        <div className="ui-skeleton h-14 w-full border-b border-credicus-line-default" />
+        <div className="space-y-4 p-6">
+          <div className="ui-skeleton h-8 w-48" />
+          <div className="grid gap-4 sm:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="ui-skeleton h-24 rounded-xl" />
+            ))}
+          </div>
+          <div className="ui-skeleton h-64 rounded-xl" />
         </div>
       </div>
     </div>

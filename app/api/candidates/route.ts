@@ -46,9 +46,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
   }
 
-  if (!body.name?.trim() || !body.mobile?.trim() || typeof body.experience !== "number") {
-    return NextResponse.json({ error: "name, mobile, and experience are required." }, { status: 400 });
+  if (!body.name?.trim() || !body.mobile?.trim()) {
+    return NextResponse.json({ error: "First name, last name, and mobile are required." }, { status: 400 });
   }
+
+  const experience =
+    typeof body.experience === "number" && !Number.isNaN(body.experience) ? body.experience : 0;
 
   try {
     const candidate = await createCandidate({
@@ -59,7 +62,7 @@ export async function POST(request: Request) {
       alt_mobile: body.alt_mobile,
       email: body.email,
       skills: body.skills ?? [],
-      experience: body.experience,
+      experience,
       source: body.source ?? "other",
       portal_id: body.portal_id,
       process: body.process,
@@ -77,9 +80,10 @@ export async function POST(request: Request) {
 
     if (body.initial_comment?.trim()) {
       const { addComment } = await import("@/lib/candidate-service");
+      const { displayNameForEmail } = await import("@/lib/demo-accounts");
       await addComment(candidate.id, body.initial_comment.trim(), {
         id: session.userId,
-        name: session.email.split("@")[0],
+        name: displayNameForEmail(session.email),
         email: session.email,
       });
     }

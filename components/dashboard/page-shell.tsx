@@ -5,5 +5,7 @@ type DashboardPageShellProps = {
 };
 
 export default function DashboardPageShell({ children }: DashboardPageShellProps) {
-  return <div className="animate-fade-in-up space-y-6">{children}</div>;
+  return (
+    <div className="ui-content-area animate-fade-in-up space-y-6">{children}</div>
+  );
 }

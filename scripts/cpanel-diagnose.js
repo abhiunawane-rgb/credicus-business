@@ -42,7 +42,7 @@ allOk =
   check(
     "Prisma client",
     fs.existsSync(path.join(root, "node_modules", ".prisma", "client", "index.js")),
-    "Run: npx prisma generate",
+    "Run in Terminal: cd ~/public_html/credicus.in && npx prisma generate",
   ) && allOk;
 allOk =
   check(

@@ -3,15 +3,16 @@ import type { ReactNode } from "react";
 
 type IconBadgeProps = {
   icon: LucideIcon;
-  variant?: "yellow" | "dark" | "light";
+  variant?: "yellow" | "dark" | "light" | "primary";
   size?: "sm" | "md" | "lg";
   className?: string;
 };
 
 const variantStyles = {
-  yellow: "bg-credicus-yellow/15 text-credicus-yellow border-credicus-yellow/30",
-  dark: "bg-white/5 text-credicus-yellow border-credicus-border",
-  light: "bg-credicus-yellow/10 text-credicus-black border-credicus-yellow/20",
+  yellow: "bg-credicus-yellow-soft text-credicus-ink border-credicus-yellow/40",
+  primary: "bg-credicus-primary-light text-credicus-ink border-credicus-yellow/30",
+  dark: "bg-credicus-primary-light text-credicus-ink border-credicus-yellow/30",
+  light: "bg-credicus-primary-soft text-credicus-ink-secondary border-credicus-line-subtle",
 };
 
 const sizeStyles = {
@@ -22,7 +23,7 @@ const sizeStyles = {
 
 export default function IconBadge({
   icon: Icon,
-  variant = "yellow",
+  variant = "primary",
   size = "md",
   className = "",
 }: IconBadgeProps) {
@@ -38,14 +39,14 @@ export default function IconBadge({
 
 type IconBadgeSlotProps = {
   children: ReactNode;
-  variant?: "yellow" | "dark" | "light";
+  variant?: "yellow" | "dark" | "light" | "primary";
   size?: "sm" | "md" | "lg";
   className?: string;
 };
 
 export function IconBadgeSlot({
   children,
-  variant = "yellow",
+  variant = "primary",
   size = "md",
   className = "",
 }: IconBadgeSlotProps) {

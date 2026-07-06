@@ -53,7 +53,7 @@ export async function GET(request: Request) {
   }
 
   const users = await prisma.user.findMany({
-    select: { id: true, name: true, email: true, role: true },
+    select: { id: true, name: true, email: true, role: true, status: true },
     orderBy: { name: "asc" },
   });
   return new NextResponse(toCsv(users), {

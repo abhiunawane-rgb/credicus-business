@@ -2,23 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Credicus Design System
+ * Principles: Fitts (44px+ targets), Proximity, Visual Hierarchy,
+ * Recognition over Recall, Consistency (Material 3 + Apple HIG inspired)
+ * Palette: Credicus logo — yellow chevron + gray wordmark on light warm surfaces
+ */
+
 :root {
   color-scheme: light;
-  --bg: #f5f5f7;
-  --text: #111111;
-  --muted: #80848e;
+
+  /* Surfaces — light warm neutrals (header, footer, page share chrome) */
+  --bg: #fafaf8;
+  --chrome-bg: #fafaf8;
+  --chrome-dark: #000000;
   --surface: #ffffff;
-  --border: #e5e5e5;
+  --surface-muted: #fffbf0;
+  --border: #e0e0dc;
+  --border-subtle: #ededea;
+
+  /* Typography — dark grey (not pure black) */
+  --text: #3d3d3d;
+  --text-secondary: #525252;
+  --text-muted: #6b7280;
+  --text-on-primary: #3d3d3d;
+
+  /* Brand — logo yellow chevron */
   --primary: #ffd200;
   --primary-hover: #e6bd00;
-  --primary-text: #000000;
-  --brand-black: #000000;
-  --brand-gray: #80848e;
+  --primary-light: #fff4cc;
+  --primary-soft: #fffbf0;
   --brand-yellow: #ffd200;
-  --shadow-glow: 0 0 24px rgba(255, 210, 0, 0.25);
-  --shadow-glow-lg: 0 0 40px rgba(255, 210, 0, 0.35);
+  --brand-yellow-hover: #e6bd00;
+  --brand-yellow-soft: #fffce8;
 
-  /* Design tokens — spacing, type, touch (Fitts / Material 3 / Apple HIG) */
+  /* Semantic */
+  --success: #059669;
+  --success-surface: #ecfdf5;
+  --error: #dc2626;
+  --error-surface: #fef2f2;
+  --warning-surface: #fff8e1;
+
+  /* Elevation — soft warm gray shadows */
+  --shadow-sm: 0 1px 2px rgba(82, 82, 82, 0.06);
+  --shadow-md: 0 4px 12px rgba(82, 82, 82, 0.08);
+  --shadow-lg: 0 8px 24px rgba(82, 82, 82, 0.1);
+  --focus-ring: 0 0 0 2px var(--primary-light), 0 0 0 4px rgba(255, 210, 0, 0.35);
+
+  /* Layout — Fitts / Material touch targets */
+  --sidebar-width: 16rem;
+  --topbar-height: 4rem;
+  --touch-min: 2.75rem;
+  --touch-comfortable: 3rem;
+
+  /* Spacing scale — Law of Proximity groups */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -26,23 +63,23 @@
   --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
-  --touch-min: 2.75rem;
-  --touch-comfortable: 3rem;
+
+  /* Radius — consistent rounded corners */
   --radius-sm: 0.375rem;
   --radius-md: 0.625rem;
   --radius-lg: 1rem;
   --radius-xl: 1.25rem;
+
+  /* Motion — subtle, accessible */
+  --motion-fast: 150ms;
+  --motion-normal: 200ms;
+
+  /* Type scale — Visual Hierarchy */
   --text-caption: 0.75rem;
   --text-label: 0.875rem;
   --text-body: 1rem;
-  --text-title: 1.5rem;
-  --text-display: 2rem;
-  --motion-fast: 150ms;
-  --motion-normal: 200ms;
-  --focus-ring: 0 0 0 2px var(--brand-yellow), 0 0 0 4px rgba(255, 210, 0, 0.35);
-  --error: #dc2626;
-  --error-surface: #fef2f2;
-  --success-surface: #fffbeb;
+  --text-title: 1.25rem;
+  --text-display: 1.875rem;
 }
 
 * {
@@ -58,7 +95,24 @@ body {
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
-  font-family: Inter, Arial, Helvetica, sans-serif;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: var(--text-body);
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Readable body copy — WCAG-friendly contrast on light surfaces */
+.ui-prose {
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+.ui-prose strong,
+.ui-prose h1,
+.ui-prose h2,
+.ui-prose h3 {
+  color: var(--text);
 }
 
 a {
@@ -66,10 +120,21 @@ a {
   text-decoration: none;
 }
 
+/* Accessibility — visible focus for keyboard users */
 :focus-visible {
-  outline: 2px solid var(--brand-yellow);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
   box-shadow: var(--focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .sr-only {
@@ -89,10 +154,11 @@ a {
   left: 1rem;
   top: -100%;
   z-index: 9999;
-  border-radius: 0.5rem;
-  background: var(--brand-black);
-  color: var(--brand-yellow);
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: var(--text-on-primary);
   padding: 0.5rem 0.75rem;
+  font-weight: 600;
 }
 
 .skip-link:focus {
@@ -100,147 +166,211 @@ a {
 }
 
 @layer utilities {
-  .shadow-glow {
-    box-shadow: var(--shadow-glow);
+  .text-ink {
+    color: var(--text);
   }
 
-  .shadow-glow-lg {
-    box-shadow: var(--shadow-glow-lg);
+  .text-ink-secondary {
+    color: var(--text-secondary);
+  }
+
+  .text-ink-muted {
+    color: var(--text-muted);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--focus-ring);
   }
 }
 
 @layer components {
-  .ui-card {
-    @apply rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300;
+  /* Site chrome — black header & footer so original logo PNG merges */
+  .ui-site-chrome {
+    background-color: var(--chrome-dark);
   }
 
-  .ui-card-dark {
-    @apply rounded-xl border border-credicus-border bg-credicus-card shadow-brand transition-all duration-300;
+  /* Sidebar nav — scroll only menu links when they overflow */
+  .dashboard-nav-scroll {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #d4d4d4 transparent;
+  }
+
+  .dashboard-nav-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .dashboard-nav-scroll::-webkit-scrollbar-thumb {
+    background-color: #d4d4d4;
+    border-radius: 9999px;
+  }
+
+  .dashboard-nav-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .ui-nav-link-dark {
+    @apply relative inline-flex min-h-[var(--touch-min)] items-center rounded-lg px-3.5 py-2 text-sm font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white;
+  }
+
+  .ui-nav-link-dark-active {
+    @apply bg-white/10 font-semibold text-credicus-yellow;
+  }
+
+  .ui-button-ghost-dark {
+    @apply inline-flex min-h-[var(--touch-min)] min-w-[var(--touch-min)] items-center justify-center rounded-lg border border-white/20 text-neutral-200 transition hover:bg-white/10 hover:text-white;
+  }
+
+  /* ── Cards (Aesthetic-Usability + Minimalism) ── */
+  .ui-card {
+    @apply rounded-xl border border-credicus-line-subtle bg-white shadow-sm transition-shadow duration-200;
   }
 
   .ui-card-interactive {
-    @apply ui-card hover:-translate-y-1 hover:border-credicus-yellow/50;
+    @apply ui-card hover:border-credicus-primary/30 hover:shadow-md;
   }
 
-  .ui-card-interactive:hover {
-    box-shadow: var(--shadow-glow);
+  .ui-panel-light {
+    @apply ui-card text-credicus-ink;
+  }
+
+  /* Legacy dark variants → light equivalents for consistency */
+  .ui-card-dark,
+  .ui-panel-dark {
+    @apply ui-card text-credicus-ink;
   }
 
   .ui-card-dark-interactive {
-    @apply ui-card-dark hover:-translate-y-1 hover:border-credicus-yellow/50;
+    @apply ui-card-interactive;
   }
 
-  .ui-card-dark-interactive:hover {
-    box-shadow: var(--shadow-glow);
-  }
-
-  /* Candidate / CRM light panel on dark dashboard */
-  .ui-panel-light {
-    @apply rounded-xl border border-gray-200 bg-white text-gray-900 shadow-sm transition-all duration-300;
-  }
-
-  .ui-panel-dark {
-    @apply rounded-xl border border-credicus-border bg-credicus-card text-gray-100 shadow-brand transition-all duration-300;
-  }
-
+  /* ── Badges ── */
   .ui-badge {
-    @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
   }
 
   .ui-badge-yellow {
-    @apply ui-badge border border-credicus-yellow/40 bg-credicus-yellow/15 text-credicus-black;
+    @apply ui-badge border border-credicus-yellow/50 bg-credicus-yellow-soft text-credicus-ink;
   }
 
   .ui-badge-muted {
-    @apply ui-badge border border-gray-200 bg-gray-100 text-credicus-gray-dark;
+    @apply ui-badge border border-credicus-line-subtle bg-credicus-surface text-credicus-ink-secondary;
   }
 
-  .ui-badge-success {
-    @apply ui-badge border border-credicus-yellow/50 bg-credicus-yellow/20 text-credicus-black;
+  .ui-badge-success,
+  .ui-badge-active-dark {
+    @apply ui-badge border border-emerald-200 bg-emerald-50 text-emerald-700;
   }
 
   .ui-badge-danger {
-    @apply ui-badge border border-red-300 bg-red-50 text-red-700;
-  }
-
-  .ui-avatar {
-    @apply flex shrink-0 items-center justify-center rounded-full bg-credicus-yellow/20 font-bold text-credicus-black;
-  }
-
-  .ui-link {
-    @apply text-sm font-medium text-credicus-yellow transition hover:text-credicus-yellow-hover hover:underline;
-  }
-
-  .ui-alert-error {
-    @apply animate-fade-in rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700;
-  }
-
-  .ui-alert-success {
-    @apply animate-fade-in rounded-md border border-credicus-yellow/40 bg-credicus-yellow/15 px-3 py-2 text-sm font-medium text-credicus-black;
-  }
-
-  .ui-alert-info {
-    @apply rounded-md border border-credicus-yellow/30 bg-credicus-yellow/10 px-3 py-2 text-sm text-credicus-black;
-  }
-
-  .ui-alert-error-dark {
-    @apply rounded-md border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-200;
-  }
-
-  .ui-alert-success-dark {
-    @apply rounded-md border border-credicus-yellow/40 bg-credicus-yellow/10 px-3 py-2 text-sm text-credicus-yellow;
-  }
-
-  .ui-alert-info-dark {
-    @apply rounded-md border border-credicus-border bg-credicus-card/60 px-3 py-2 text-sm text-gray-200;
-  }
-
-  .ui-badge-active-dark {
-    @apply ui-badge border border-credicus-yellow/40 bg-credicus-yellow/15 text-credicus-yellow;
+    @apply ui-badge border border-red-200 bg-red-50 text-red-700;
   }
 
   .ui-badge-inactive-dark {
-    @apply ui-badge border border-red-400/40 bg-red-500/15 text-red-300;
+    @apply ui-badge border border-credicus-line-subtle bg-credicus-surface text-credicus-ink-muted;
   }
 
-  .ui-surface-dark {
-    @apply rounded-md border border-credicus-border bg-credicus-black;
+  .ui-avatar {
+    @apply flex shrink-0 items-center justify-center rounded-full bg-credicus-primary-light font-bold text-credicus-ink;
   }
 
+  .ui-link {
+    @apply text-sm font-medium text-credicus-ink transition hover:text-credicus-yellow hover:underline;
+  }
+
+  /* ── Alerts — Help users diagnose errors ── */
+  .ui-alert-error {
+    @apply animate-fade-in rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700;
+  }
+
+  .ui-alert-success {
+    @apply animate-fade-in rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800;
+  }
+
+  .ui-alert-info {
+    @apply rounded-lg border border-credicus-yellow/30 bg-credicus-yellow-soft px-4 py-3 text-sm text-credicus-ink-secondary;
+  }
+
+  .ui-alert-error-dark,
+  .ui-alert-success-dark,
+  .ui-alert-info-dark {
+    @apply ui-alert-info;
+  }
+
+  /* ── Action dialogs & toasts ── */
+  .ui-action-dialog-backdrop {
+    @apply fixed inset-0 z-[100] flex items-center justify-center bg-credicus-ink/40 p-4 backdrop-blur-[2px];
+  }
+
+  .ui-action-dialog {
+    @apply relative w-full max-w-md animate-fade-in rounded-xl border border-credicus-line-subtle bg-white p-6 shadow-lg;
+  }
+
+  .ui-action-toast-stack {
+    @apply fixed right-4 top-[calc(var(--topbar-height)+1rem)] z-[110] flex w-[min(100vw-2rem,24rem)] flex-col gap-3;
+  }
+
+  .ui-action-toast {
+    @apply flex items-start gap-3 rounded-xl border px-4 py-3 shadow-md animate-fade-in;
+  }
+
+  .ui-action-toast-success {
+    @apply border-emerald-200 bg-emerald-50 text-emerald-800;
+  }
+
+  .ui-action-toast-error {
+    @apply border-red-200 bg-red-50 text-red-700;
+  }
+
+  .ui-action-toast-info {
+    @apply border-credicus-yellow/30 bg-credicus-yellow-soft text-credicus-ink;
+  }
+
+  .ui-action-toast-warning {
+    @apply border-credicus-yellow/40 bg-credicus-primary-light text-credicus-ink;
+  }
+
+  /* ── Stage actions ── */
   .ui-stage-shortlist {
-    @apply border-credicus-yellow bg-credicus-yellow/10 text-credicus-black hover:bg-credicus-yellow/20;
+    @apply border-credicus-yellow/50 bg-credicus-yellow-soft text-credicus-ink hover:bg-credicus-yellow-muted;
   }
 
-  .ui-stage-maybe {
-    @apply border-credicus-gray bg-white text-credicus-gray-dark hover:bg-gray-50;
-  }
-
+  .ui-stage-maybe,
   .ui-stage-maybe-dark {
-    @apply border-credicus-border bg-credicus-black text-credicus-gray-light hover:bg-credicus-border/60;
+    @apply border-credicus-line-default bg-white text-credicus-ink-secondary hover:bg-credicus-surface;
   }
 
   .ui-stage-reject {
-    @apply border-red-400 bg-white text-red-600 hover:bg-red-50;
+    @apply border-red-300 bg-red-50 text-red-700 hover:bg-red-100;
   }
 
+  /* ── Icon buttons — Fitts: min 44px touch area ── */
   .ui-icon-btn {
-    @apply rounded-lg p-2 text-credicus-gray transition-all duration-200 hover:scale-110 hover:bg-credicus-yellow/10 hover:text-credicus-black active:scale-95;
+    @apply inline-flex min-h-[var(--touch-min)] min-w-[var(--touch-min)] items-center justify-center rounded-lg text-credicus-ink-muted transition-colors hover:bg-credicus-primary-soft hover:text-credicus-ink active:scale-95;
   }
 
   .ui-icon-btn-danger {
-    @apply rounded-lg p-2 text-credicus-gray transition-all duration-200 hover:scale-110 hover:bg-red-50 hover:text-red-600 active:scale-95;
+    @apply ui-icon-btn hover:bg-red-50 hover:text-red-600;
   }
 
+  /* ── Form fields — Error prevention + Recognition ── */
   .ui-field-group {
     @apply space-y-1.5;
   }
 
   .ui-label {
-    @apply block text-sm font-medium text-gray-800;
+    @apply block text-sm font-medium text-credicus-ink;
+  }
+
+  .ui-label-required::after {
+    content: " *";
+    @apply text-red-500;
   }
 
   .ui-field-hint {
-    @apply text-xs leading-relaxed text-credicus-gray;
+    @apply text-xs leading-relaxed text-credicus-ink-muted;
   }
 
   .ui-field-error {
@@ -248,65 +378,57 @@ a {
   }
 
   .ui-input {
-    @apply min-h-[var(--touch-min)] w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition-all duration-200 placeholder:text-gray-400 focus:border-credicus-yellow focus:ring-2 focus:ring-credicus-yellow/30;
+    @apply min-h-[var(--touch-min)] w-full rounded-lg border border-credicus-line-default bg-white px-3.5 py-2.5 text-sm text-credicus-ink outline-none transition-all placeholder:text-credicus-ink-muted focus:border-credicus-primary focus:ring-2 focus:ring-credicus-primary/20 disabled:cursor-not-allowed disabled:bg-credicus-surface disabled:opacity-60;
   }
 
-  .ui-input:focus {
-    box-shadow: var(--shadow-glow);
-  }
-
-  .ui-input-dark {
-    @apply min-h-[var(--touch-min)] w-full rounded-md border border-credicus-border bg-credicus-black px-3 py-2.5 text-sm text-gray-100 outline-none transition-all duration-200 placeholder:text-credicus-gray focus:border-credicus-yellow focus:ring-2 focus:ring-credicus-yellow/30;
-  }
-
+  .ui-input-dark,
   .ui-input-file-dark {
-    @apply block w-full cursor-pointer rounded-md border border-credicus-border bg-credicus-black px-3 py-2 text-sm text-gray-200 file:mr-3 file:rounded file:border-0 file:bg-credicus-border file:px-3 file:py-1.5 file:text-sm file:text-white hover:file:bg-credicus-gray-dark;
+    @apply ui-input;
   }
 
-  .ui-input-dark:focus {
-    box-shadow: var(--shadow-glow);
-  }
-
+  /* ── Buttons — Fitts + Consistency ── */
   .ui-button-primary {
-    @apply inline-flex min-h-[var(--touch-min)] items-center justify-center rounded-md bg-credicus-yellow px-4 py-2.5 text-sm font-semibold text-credicus-black shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-credicus-yellow-hover active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0;
+    @apply inline-flex min-h-[var(--touch-min)] items-center justify-center gap-2 rounded-lg bg-credicus-primary px-5 py-2.5 text-sm font-semibold text-credicus-ink shadow-brand transition-all hover:bg-credicus-primary-hover hover:shadow-brand-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .ui-button-sm {
-    @apply min-h-[2.25rem] px-3 py-2 text-xs;
+    @apply min-h-[2.25rem] px-3.5 py-2 text-xs;
   }
 
   .ui-button-lg {
-    @apply min-h-[var(--touch-comfortable)] px-5 py-3 text-base;
-  }
-
-  .ui-button-danger {
-    @apply inline-flex min-h-[var(--touch-min)] items-center justify-center rounded-md border border-red-300 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition-all duration-200 hover:bg-red-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70;
-  }
-
-  .ui-button-primary:hover:not(:disabled) {
-    box-shadow: var(--shadow-glow);
+    @apply min-h-[var(--touch-comfortable)] px-6 py-3 text-base;
   }
 
   .ui-button-secondary {
-    @apply inline-flex min-h-[var(--touch-min)] items-center justify-center rounded-md border border-credicus-gray px-4 py-2.5 text-sm font-medium text-credicus-gray transition-all duration-200 hover:-translate-y-0.5 hover:border-credicus-yellow hover:text-credicus-black active:scale-[0.98];
+    @apply inline-flex min-h-[var(--touch-min)] items-center justify-center gap-2 rounded-lg border border-credicus-line-default bg-white px-5 py-2.5 text-sm font-medium text-credicus-ink-secondary shadow-sm transition-all hover:border-credicus-yellow/50 hover:bg-credicus-primary-soft hover:text-credicus-ink active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .ui-button-ghost {
-    @apply inline-flex min-h-[var(--touch-min)] items-center justify-center rounded-md border border-credicus-border px-4 py-2.5 text-sm font-medium text-gray-200 transition-all duration-200 hover:-translate-y-0.5 hover:border-credicus-yellow hover:text-credicus-yellow active:scale-[0.98];
+    @apply inline-flex min-h-[var(--touch-min)] items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-credicus-ink-secondary transition-all hover:bg-credicus-primary-soft hover:text-credicus-ink active:scale-[0.98];
+  }
+
+  .ui-button-danger {
+    @apply inline-flex min-h-[var(--touch-min)] items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-5 py-2.5 text-sm font-semibold text-red-700 transition-all hover:bg-red-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  /* ── Navigation ── */
+  .ui-nav-link {
+    @apply relative inline-flex min-h-[var(--touch-min)] items-center rounded-lg px-3.5 py-2 text-sm font-medium text-credicus-ink-secondary transition-colors hover:bg-credicus-primary-soft hover:text-credicus-ink;
+  }
+
+  .ui-nav-link-active {
+    @apply border border-credicus-yellow/30 bg-credicus-primary-light font-semibold text-credicus-ink;
   }
 
   .ui-nav-separator {
-    @apply mx-1 hidden h-6 w-px shrink-0 bg-credicus-border lg:block;
+    @apply mx-1 hidden h-6 w-px shrink-0 bg-credicus-line-subtle lg:block;
   }
 
   .ui-nav-group-label {
-    @apply px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-credicus-gray;
+    @apply px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-credicus-ink-muted;
   }
 
-  .ui-button-ghost:hover {
-    box-shadow: var(--shadow-glow);
-  }
-
+  /* ── Typography hierarchy ── */
   .ui-section-header {
     @apply space-y-2;
   }
@@ -316,11 +438,15 @@ a {
   }
 
   .ui-page-title {
-    @apply text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl;
+    @apply text-display font-bold tracking-tight text-credicus-ink;
   }
 
   .ui-page-subtitle {
-    @apply text-lg text-credicus-gray;
+    @apply text-base text-credicus-ink-muted;
+  }
+
+  .ui-skeleton {
+    @apply animate-pulse rounded-lg bg-credicus-line-subtle;
   }
 
   .ui-shimmer {
@@ -329,17 +455,155 @@ a {
     animation: shimmer 2.5s linear infinite;
   }
 
-  .ui-nav-link {
-    @apply relative inline-flex min-h-[var(--touch-min)] items-center rounded-md px-3 py-2 transition-all duration-200 hover:text-credicus-yellow;
+  /* ── Proximity groups ── */
+  .ui-form-section {
+    @apply space-y-4 rounded-xl border border-credicus-line-subtle bg-white p-5 shadow-sm;
   }
 
-  .ui-nav-link-active {
-    @apply bg-credicus-yellow/10 text-credicus-yellow;
+  .ui-form-section-title {
+    @apply border-b border-credicus-line-subtle pb-3 text-title text-credicus-ink;
   }
 
-  .ui-skeleton {
-    @apply animate-pulse rounded-lg bg-credicus-border/60;
+  .ui-toolbar {
+    @apply flex flex-col gap-3 rounded-xl border border-credicus-line-subtle bg-white p-4 shadow-sm sm:flex-row sm:items-center;
   }
+
+  /* ── UX patterns (Material 3 / Apple HIG / Nielsen heuristics) ── */
+
+  /* Visual hierarchy + readable line length */
+  .ui-content-area {
+    @apply mx-auto w-full max-w-6xl;
+  }
+
+  /* Law of Proximity — grouped related fields */
+  .ui-proximity-group {
+    @apply space-y-4 rounded-xl border border-credicus-line-subtle bg-credicus-surface/60 p-4 sm:p-5;
+  }
+
+  .ui-proximity-group-title {
+    @apply text-sm font-semibold text-credicus-ink;
+  }
+
+  .ui-proximity-group-hint {
+    @apply text-xs text-credicus-ink-muted;
+  }
+
+  /* Fitts's Law — primary actions grouped, easy to reach */
+  .ui-action-bar {
+    @apply flex flex-wrap gap-3 border-t border-credicus-line-subtle pt-4;
+  }
+
+  /* User control — familiar back navigation */
+  .ui-back-link {
+    @apply inline-flex min-h-[var(--touch-min)] items-center gap-1.5 rounded-lg px-1 text-sm font-medium text-credicus-ink-secondary transition-colors hover:bg-credicus-primary-soft hover:text-credicus-ink;
+  }
+
+  /* Empty states — recognition over recall */
+  .ui-empty-state {
+    @apply ui-card flex flex-col items-center justify-center gap-3 px-6 py-12 text-center;
+  }
+
+  /* Error prevention — invalid inputs */
+  .ui-input[aria-invalid="true"],
+  .ui-input-dark[aria-invalid="true"] {
+    @apply border-red-400 focus:border-red-500 focus:ring-red-400/30;
+  }
+
+  /* Loading — reduce uncertainty */
+  .ui-loading-inline {
+    @apply inline-flex items-center gap-2 text-sm text-credicus-ink-secondary;
+  }
+
+  /* Search toolbar — label + input proximity */
+  .ui-search-bar {
+    @apply ui-card flex flex-col gap-3 p-4 sm:flex-row sm:items-end;
+  }
+
+  .ui-search-bar label {
+    @apply ui-label;
+  }
+
+  /* Data tables — Jakob's Law (familiar admin tables) + responsive */
+  .ui-data-table-wrap {
+    @apply overflow-x-auto;
+  }
+
+  .ui-data-table {
+    @apply min-w-full text-sm;
+  }
+
+  .ui-data-table thead tr {
+    @apply border-b border-credicus-line-subtle bg-credicus-surface/80 text-left;
+  }
+
+  .ui-data-table th {
+    @apply px-4 py-3 text-xs font-semibold uppercase tracking-wide text-credicus-ink-muted;
+  }
+
+  .ui-data-table tbody tr {
+    @apply border-b border-credicus-line-subtle transition-colors hover:bg-credicus-surface/50;
+  }
+
+  .ui-data-table td {
+    @apply px-4 py-3 text-credicus-ink-secondary;
+  }
+
+  .ui-data-table td:first-child {
+    @apply font-medium text-credicus-ink;
+  }
+
+  /* Mobile cards — adaptive layout (Material / Android guidelines) */
+  .ui-list-cards {
+    @apply grid gap-3 md:hidden;
+  }
+
+  .ui-list-card {
+    @apply ui-card space-y-3 p-4;
+  }
+
+  .ui-list-card-header {
+    @apply flex items-start justify-between gap-3;
+  }
+
+  .ui-list-card-actions {
+    @apply flex flex-wrap gap-2 border-t border-credicus-line-subtle pt-3;
+  }
+
+  /* Status toggle — Fitts: larger touch target */
+  .ui-status-switch {
+    @apply relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-credicus-primary/40 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .ui-status-switch-knob {
+    @apply absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform;
+  }
+
+  .ui-status-switch-on {
+    @apply bg-emerald-500;
+  }
+
+  .ui-status-switch-off {
+    @apply bg-credicus-line-default;
+  }
+
+  .ui-status-switch-on .ui-status-switch-knob {
+    @apply left-6;
+  }
+
+  .ui-status-switch-off .ui-status-switch-knob {
+    @apply left-1;
+  }
+
+  /* Dismissible alert — user control & freedom */
+  .ui-alert-dismissible {
+    @apply flex items-start justify-between gap-3;
+  }
+}
+
+/* Focus on dark chrome (accessibility) */
+.ui-site-chrome :focus-visible {
+  outline-color: var(--primary);
+  outline-offset: 2px;
 }
 
 @keyframes fade-in {

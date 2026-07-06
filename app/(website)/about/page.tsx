@@ -52,12 +52,12 @@ export default function AboutPage() {
         </div>
 
         <div className="mt-16">
-          <h2 className="mb-8 text-center text-2xl font-semibold text-gray-900">What drives us</h2>
+          <h2 className="mb-8 text-center text-2xl font-semibold text-credicus-ink">What drives us</h2>
           <div className="grid gap-4 sm:grid-cols-3">
             {values.map((item) => (
               <div key={item.title} className="ui-card-interactive p-6">
                 <IconBadge icon={item.icon} variant="light" className="mb-4" />
-                <h3 className="font-semibold text-gray-900">{item.title}</h3>
+                <h3 className="font-semibold text-credicus-ink">{item.title}</h3>
                 <p className="mt-2 text-sm text-credicus-gray">{item.description}</p>
               </div>
             ))}

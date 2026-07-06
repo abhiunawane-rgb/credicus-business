@@ -10,28 +10,26 @@ const steps = [
 
 export default function HiringFunnel() {
   return (
-    <div className="rounded-2xl border border-credicus-border bg-credicus-card p-6 shadow-brand-lg">
-      <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-credicus-yellow">
-        Hiring pipeline
-      </p>
-      <p className="mb-6 text-lg font-semibold text-white">End-to-end recruitment flow</p>
+    <div className="rounded-2xl border border-credicus-line-subtle bg-white p-6 shadow-md">
+      <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-credicus-yellow">Hiring pipeline</p>
+      <p className="mb-6 text-lg font-semibold text-credicus-ink">End-to-end recruitment flow</p>
       <div className="space-y-3">
         {steps.map((step, index) => {
           const Icon = step.icon;
           const width = 100 - index * 14;
           return (
             <div key={step.label} className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-credicus-yellow/15 text-credicus-yellow">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-credicus-yellow-soft text-credicus-yellow">
                 <Icon className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center justify-between text-xs">
-                  <span className="text-credicus-gray-light">{step.label}</span>
-                  <span className="font-semibold text-credicus-yellow">{step.value}</span>
+                  <span className="text-credicus-ink-muted">{step.label}</span>
+                  <span className="font-semibold text-credicus-ink">{step.value}</span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-credicus-border">
+                <div className="h-2 overflow-hidden rounded-full bg-credicus-line-subtle">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-credicus-yellow to-credicus-yellow-hover transition-all"
+                    className="h-full rounded-full bg-gradient-to-r from-credicus-yellow-soft to-credicus-yellow transition-all"
                     style={{ width: `${width}%` }}
                   />
                 </div>

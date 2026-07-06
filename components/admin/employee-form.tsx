@@ -75,7 +75,7 @@ export default function EmployeeForm() {
   return (
     <div className="space-y-6">
       <form onSubmit={onSubmit} className="ui-card-dark space-y-4 p-6">
-        <div className="flex items-center gap-2 border-b border-credicus-border pb-3">
+        <div className="flex items-center gap-2 border-b border-credicus-line-default pb-3">
           <UserPlus className="h-5 w-5 text-credicus-yellow" />
           <h4 className="text-lg font-semibold">Add Employee Data</h4>
         </div>
@@ -124,7 +124,7 @@ export default function EmployeeForm() {
         <h4 className="mb-3 font-semibold">Employee Directory</h4>
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="border-b border-credicus-border text-credicus-gray">
+            <tr className="border-b border-credicus-line-default text-credicus-gray">
               <th className="px-3 py-2 text-left">Code</th>
               <th className="px-3 py-2 text-left">Name</th>
               <th className="px-3 py-2 text-left">Department</th>
@@ -134,7 +134,7 @@ export default function EmployeeForm() {
           </thead>
           <tbody>
             {employees.map((emp) => (
-              <tr key={emp.id} className="border-b border-credicus-border/60">
+              <tr key={emp.id} className="border-b border-credicus-line-default/60">
                 <td className="px-3 py-2 text-credicus-yellow">{emp.employee_code ?? "—"}</td>
                 <td className="px-3 py-2 text-white">
                   {emp.first_name} {emp.last_name}

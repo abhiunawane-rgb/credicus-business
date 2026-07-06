@@ -4,19 +4,19 @@ import { useState, type FormEvent } from "react";
 import Alert from "@/components/ui/alert";
 import Button from "@/components/ui/button";
 import { Field, FieldInput, FieldTextarea } from "@/components/ui/field";
+import { useActionFeedback } from "@/components/providers/action-feedback-provider";
 
 export default function ContactForm() {
+  const { notify } = useActionFeedback();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    setSuccess("");
 
     if (message.trim().length < 10) {
       setError("Please share a bit more detail — at least 10 characters — so we can help you properly.");
@@ -39,7 +39,10 @@ export default function ContactForm() {
         return;
       }
 
-      setSuccess(payload.message ?? "Thanks — your message was sent. We will get back to you soon.");
+      notify.success(
+        payload.message ?? "Thanks — your message was sent. We will get back to you soon.",
+        "Message sent",
+      );
       setName("");
       setEmail("");
       setMessage("");
@@ -96,20 +99,18 @@ export default function ContactForm() {
         />
       </Field>
 
-      <Button type="submit" loading={isSubmitting} loadingLabel="Sending message...">
-        Send inquiry
-      </Button>
-
-      {success ? (
-        <Alert variant="success" title="Message sent" live="polite">
-          {success}
-        </Alert>
-      ) : null}
       {error ? (
         <Alert variant="error" title="Could not send" live="assertive">
           {error}
+          <span className="mt-2 block text-xs font-normal opacity-90">
+            Check your internet connection, fill all fields, and try again.
+          </span>
         </Alert>
       ) : null}
+
+      <Button type="submit" loading={isSubmitting} loadingLabel="Sending message..." className="w-full sm:w-auto">
+        Send inquiry
+      </Button>
     </form>
   );
 }

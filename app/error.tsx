@@ -15,7 +15,7 @@ export default function RootError({ reset }: RootErrorProps) {
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600">
           <AlertTriangle className="h-6 w-6" aria-hidden />
         </div>
-        <h1 className="text-xl font-semibold text-slate-900">Something went wrong</h1>
+        <h1 className="text-xl font-semibold text-credicus-ink">Something went wrong</h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-600">
           This page could not load. You can try again or return to the home page — your data is safe.
         </p>

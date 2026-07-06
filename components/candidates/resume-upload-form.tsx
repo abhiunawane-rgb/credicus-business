@@ -64,11 +64,11 @@ export default function ResumeUploadForm() {
   }
 
   return (
-    <div className="ui-card-dark space-y-4 p-6">
-      <h4 className="text-lg font-semibold">Resume Upload</h4>
+    <div className="ui-form-section space-y-4">
+      <h4 className="ui-form-section-title">Resume Upload</h4>
       <form onSubmit={onSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="candidateId" className="mb-1 block text-sm text-slate-300">
+        <div className="ui-field-group">
+          <label htmlFor="candidateId" className="ui-label ui-label-required">
             Candidate ID
           </label>
           <input
@@ -76,11 +76,11 @@ export default function ResumeUploadForm() {
             value={candidateId}
             onChange={(event) => setCandidateId(event.target.value)}
             placeholder="Paste candidate UUID"
-            className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none ring-slate-500 focus:ring-2"
+            className="ui-input"
           />
         </div>
-        <div>
-          <label htmlFor="resumeFile" className="mb-1 block text-sm text-slate-300">
+        <div className="ui-field-group">
+          <label htmlFor="resumeFile" className="ui-label ui-label-required">
             Resume File (.pdf, .doc, .docx)
           </label>
           <input
@@ -88,7 +88,7 @@ export default function ResumeUploadForm() {
             type="file"
             accept=".pdf,.doc,.docx"
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-            className="block w-full cursor-pointer rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 file:mr-3 file:rounded file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-sm file:text-white hover:file:bg-slate-600"
+            className="ui-input file:mr-3 file:rounded-md file:border-0 file:bg-credicus-primary-light file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-credicus-primary"
           />
         </div>
         <div className="flex flex-wrap gap-2">
@@ -115,11 +115,11 @@ export default function ResumeUploadForm() {
         </div>
       </form>
 
-      {error ? <p className="ui-alert-error-dark">{error}</p> : null}
-      {success ? <p className="ui-alert-success-dark">{success}</p> : null}
+      {error ? <p className="ui-alert-error" role="alert">{error}</p> : null}
+      {success ? <p className="ui-alert-success" role="status">{success}</p> : null}
 
       {resumeUrl ? (
-        <div className="ui-surface-dark space-y-3 p-4">
+        <div className="rounded-xl border border-credicus-line-subtle bg-credicus-surface p-4 space-y-3">
           <div className="flex flex-wrap gap-3 text-sm">
             <a href={resumeUrl} target="_blank" rel="noreferrer" className="ui-link">
               Preview
@@ -132,7 +132,7 @@ export default function ResumeUploadForm() {
             <iframe
               title="Resume preview"
               src={resumeUrl}
-              className="h-80 w-full rounded-md border border-credicus-border bg-white"
+              className="h-80 w-full rounded-md border border-credicus-line-default bg-white"
             />
           ) : (
             <p className="text-xs text-credicus-gray">
