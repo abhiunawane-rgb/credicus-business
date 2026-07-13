@@ -7,7 +7,7 @@ import CandidateCard from "@/components/candidates/candidate-card";
 import ListFilterBar from "@/components/dashboard/list-filter-bar";
 import { useActionFeedback } from "@/components/providers/action-feedback-provider";
 import EmptyState from "@/components/ui/empty-state";
-import type { CandidateRecord, CandidateStage, CandidateTransferRecord, CommentRecord } from "@/lib/candidate-types";
+import type { CandidateRecord, CandidateStage, CommentRecord } from "@/lib/candidate-types";
 import { displayCandidateName, STAGE_LABELS } from "@/lib/candidate-types";
 import { actionMessages } from "@/lib/action-messages";
 import { matchesSearch } from "@/lib/list-filters";
@@ -38,7 +38,6 @@ export default function CandidateWorkbench({
   const [dateTo, setDateTo] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [pendingTransferIds, setPendingTransferIds] = useState<Set<string>>(new Set());
 
   const loadCandidates = useCallback(async () => {
     setLoading(true);
@@ -75,25 +74,13 @@ export default function CandidateWorkbench({
     void loadCandidates();
   }, [loadCandidates]);
 
-  const loadPendingTransfers = useCallback(async () => {
-    if (!enableTransferRequests) {
-      setPendingTransferIds(new Set());
-      return;
-    }
-    try {
-      const response = await fetch("/api/candidates/transfers?view=outgoing&status=pending", {
-        credentials: "same-origin",
-      });
-      const payload = (await response.json()) as { data?: CandidateTransferRecord[] };
-      setPendingTransferIds(new Set((payload.data ?? []).map((transfer) => transfer.candidate_id)));
-    } catch {
-      setPendingTransferIds(new Set());
-    }
-  }, [enableTransferRequests]);
-
   useEffect(() => {
-    void loadPendingTransfers();
-  }, [loadPendingTransfers]);
+    function handleTransferResolved() {
+      void loadCandidates();
+    }
+    window.addEventListener("credicus:transfer-resolved", handleTransferResolved);
+    return () => window.removeEventListener("credicus:transfer-resolved", handleTransferResolved);
+  }, [loadCandidates]);
 
   const filteredCandidates = useMemo(() => {
     return candidates.filter((candidate) => {
@@ -171,7 +158,7 @@ export default function CandidateWorkbench({
       return;
     }
     notify.success(`Transfer requested for ${candidateName}. Waiting for owner approval.`);
-    setPendingTransferIds((prev) => new Set(prev).add(candidateId));
+    await loadCandidates();
   }
 
   const stageOptions = [
@@ -185,7 +172,9 @@ export default function CandidateWorkbench({
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Name, mobile, email, or skills"
-        onRefresh={() => void loadCandidates()}
+        onRefresh={() => {
+          void loadCandidates();
+        }}
         refreshing={loading}
         filters={[
           {
@@ -269,7 +258,6 @@ export default function CandidateWorkbench({
               readOnly={readOnly}
               showAddedBy={showAddedBy}
               enableTransferRequest={enableTransferRequests}
-              transferPending={pendingTransferIds.has(candidate.id)}
               variant="light"
               onStageChange={(stage, reason) => handleStageChange(candidate.id, stage, reason)}
               onAddComment={(content) => handleAddComment(candidate.id, content)}

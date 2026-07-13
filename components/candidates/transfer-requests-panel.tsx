@@ -126,10 +126,13 @@ export default function TransferRequestsPanel() {
       }
       notify.success(
         action === "approve"
-          ? "Transfer approved. Candidate moved to the requester."
+          ? "Transfer approved. Candidate is now in the requester's list."
           : "Transfer request rejected.",
       );
       await loadTransfers();
+      if (action === "approve") {
+        window.dispatchEvent(new CustomEvent("credicus:transfer-resolved"));
+      }
     } finally {
       setBusyId(null);
     }

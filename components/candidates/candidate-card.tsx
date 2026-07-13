@@ -9,12 +9,13 @@ import {
   Share2,
   Trash2,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import CommentSection from "@/components/candidates/comment-section";
 import StageActions from "@/components/candidates/stage-actions";
 import type { CandidateRecord, CandidateStage, CommentRecord } from "@/lib/candidate-types";
 import { displayCandidateName, STAGE_LABELS } from "@/lib/candidate-types";
-import { displayNameForEmail } from "@/lib/demo-accounts";
+import { displayNameForEmail, emailsMatch } from "@/lib/demo-accounts";
 
 type CandidateCardProps = {
   candidate: CandidateRecord;
@@ -24,7 +25,6 @@ type CandidateCardProps = {
   commentsExpanded?: boolean;
   showAddedBy?: boolean;
   enableTransferRequest?: boolean;
-  transferPending?: boolean;
   variant?: "light" | "dark";
   onStageChange: (stage: CandidateStage, rejectionReason?: string) => Promise<void>;
   onAddComment: (content: string) => Promise<void>;
@@ -56,7 +56,6 @@ export default function CandidateCard({
   commentsExpanded = false,
   showAddedBy = false,
   enableTransferRequest = false,
-  transferPending = false,
   variant = "light",
   onStageChange,
   onAddComment,
@@ -79,7 +78,7 @@ export default function CandidateCard({
   }
 
   async function handleTransferRequest() {
-    if (!onRequestTransfer || transferPending || transferBusy) return;
+    if (!onRequestTransfer || myPendingRequest || pendingTransfer || transferBusy) return;
     setTransferBusy(true);
     try {
       await onRequestTransfer();
@@ -88,9 +87,12 @@ export default function CandidateCard({
     }
   }
 
-  const isOwnCandidate = Boolean(
-    currentUserEmail && candidate.created_by && candidate.created_by === currentUserEmail,
+  const isOwnCandidate = emailsMatch(currentUserEmail, candidate.created_by);
+  const pendingTransfer = candidate.transfer_pending ?? null;
+  const myPendingRequest = Boolean(
+    pendingTransfer && emailsMatch(pendingTransfer.requested_by, currentUserEmail),
   );
+  const needsMyApproval = Boolean(isOwnCandidate && pendingTransfer);
 
   return (
     <article
@@ -288,9 +290,13 @@ export default function CandidateCard({
                 : "Read-only talent pool view."}
             </p>
             {enableTransferRequest && !isOwnCandidate ? (
-              transferPending ? (
+              myPendingRequest ? (
                 <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">
                   Transfer pending approval
+                </span>
+              ) : pendingTransfer ? (
+                <span className="rounded-full border border-credicus-line-subtle bg-credicus-surface px-3 py-1.5 text-xs font-medium text-credicus-ink-secondary">
+                  Transfer already requested
                 </span>
               ) : (
                 <button
@@ -302,6 +308,14 @@ export default function CandidateCard({
                   {transferBusy ? "Requesting..." : "Request transfer"}
                 </button>
               )
+            ) : null}
+            {needsMyApproval ? (
+              <Link
+                href="/dashboard/recruiter/transfers"
+                className="rounded-full border border-credicus-primary/40 bg-credicus-yellow-soft px-3 py-1.5 text-xs font-medium text-credicus-ink hover:bg-credicus-primary/20"
+              >
+                Approve transfer request
+              </Link>
             ) : null}
           </div>
         </div>

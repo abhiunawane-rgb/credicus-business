@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type {
   CandidateRecord,
+  CandidateTransferPending,
   CandidateTransferRecord,
   CommentRecord,
   EmployeeRecord,
@@ -211,7 +212,9 @@ export function memoryListCandidates(filters: ListCandidatesFilters = {}): Candi
   let list = getStore().candidates;
 
   if (createdBy) {
-    list = list.filter((candidate) => candidate.created_by === createdBy);
+    list = list.filter((candidate) =>
+      candidate.created_by ? candidate.created_by.toLowerCase() === createdBy.toLowerCase() : false,
+    );
   }
 
   list = list.filter((candidate) => matchesCreatedDate(candidate, dateFrom, dateTo));
@@ -325,13 +328,40 @@ export type ListTransferFilters = {
   status?: TransferRequestStatus;
 };
 
+export function memoryFindCandidateByTransferPendingId(
+  transferId: string,
+): CandidateRecord | undefined {
+  return getStore().candidates.find((candidate) => candidate.transfer_pending?.id === transferId);
+}
+
+export function memoryAppendTransferHistory(record: CandidateTransferRecord): CandidateTransferRecord {
+  getStore().transfers.unshift(record);
+  return record;
+}
+
 export function memoryListTransfers(filters: ListTransferFilters = {}): CandidateTransferRecord[] {
-  let list = [...getStore().transfers];
+  const pendingFromCandidates: CandidateTransferRecord[] = getStore()
+    .candidates.filter((candidate) => candidate.transfer_pending && candidate.created_by)
+    .map((candidate) => ({
+      id: candidate.transfer_pending!.id,
+      candidate_id: candidate.id,
+      candidate_name: candidate.name,
+      from_owner: candidate.created_by!,
+      requested_by: candidate.transfer_pending!.requested_by,
+      status: "pending" as const,
+      message: candidate.transfer_pending!.message ?? null,
+      created_at: candidate.transfer_pending!.requested_at,
+      resolved_at: null,
+    }));
+
+  let list = [...pendingFromCandidates, ...getStore().transfers.filter((transfer) => transfer.status !== "pending")];
   if (filters.fromOwner) {
-    list = list.filter((transfer) => transfer.from_owner === filters.fromOwner);
+    const owner = filters.fromOwner.toLowerCase();
+    list = list.filter((transfer) => transfer.from_owner.toLowerCase() === owner);
   }
   if (filters.requestedBy) {
-    list = list.filter((transfer) => transfer.requested_by === filters.requestedBy);
+    const requester = filters.requestedBy.toLowerCase();
+    list = list.filter((transfer) => transfer.requested_by.toLowerCase() === requester);
   }
   if (filters.candidateId) {
     list = list.filter((transfer) => transfer.candidate_id === filters.candidateId);
@@ -350,12 +380,28 @@ export function memoryFindPendingTransfer(
   candidateId: string,
   requestedBy: string,
 ): CandidateTransferRecord | undefined {
-  return getStore().transfers.find(
-    (transfer) =>
-      transfer.candidate_id === candidateId &&
-      transfer.requested_by === requestedBy &&
-      transfer.status === "pending",
-  );
+  const candidate = getStore().candidates.find((item) => item.id === candidateId);
+  if (!candidate?.transfer_pending) return undefined;
+  if (candidate.transfer_pending.requested_by.toLowerCase() !== requestedBy.toLowerCase()) {
+    return undefined;
+  }
+  return {
+    id: candidate.transfer_pending.id,
+    candidate_id: candidate.id,
+    candidate_name: candidate.name,
+    from_owner: candidate.created_by ?? "",
+    requested_by: candidate.transfer_pending.requested_by,
+    status: "pending",
+    message: candidate.transfer_pending.message ?? null,
+    created_at: candidate.transfer_pending.requested_at,
+    resolved_at: null,
+  };
+}
+
+export function memoryFindAnyPendingTransferForCandidate(
+  candidateId: string,
+): CandidateTransferPending | undefined {
+  return getStore().candidates.find((item) => item.id === candidateId)?.transfer_pending ?? undefined;
 }
 
 export function memoryCreateTransferRequest(data: {

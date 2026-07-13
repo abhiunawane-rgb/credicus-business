@@ -37,6 +37,7 @@ export type CandidateRecord = {
   resume_url?: string | null;
   status: CandidateStage;
   created_by?: string | null;
+  transfer_pending?: CandidateTransferPending | null;
   created_at: string;
   updated_at: string;
 };
@@ -66,6 +67,13 @@ export type EmployeeRecord = {
 };
 
 export type TransferRequestStatus = "pending" | "approved" | "rejected";
+
+export type CandidateTransferPending = {
+  id: string;
+  requested_by: string;
+  requested_at: string;
+  message?: string | null;
+};
 
 export type CandidateTransferRecord = {
   id: string;

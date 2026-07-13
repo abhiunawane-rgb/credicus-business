@@ -14,6 +14,14 @@ export function displayNameForEmail(email: string): string {
   return demoAccounts.find((account) => account.email === email)?.name ?? email.split("@")[0];
 }
 
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+export function emailsMatch(a?: string | null, b?: string | null): boolean {
+  return Boolean(a && b && normalizeEmail(a) === normalizeEmail(b));
+}
+
 export function recruiterEmails(): string[] {
   return demoAccounts.filter((account) => account.role === "recruiter").map((account) => account.email);
 }

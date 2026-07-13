@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createCandidate, listCandidates } from "@/lib/candidate-service";
+import { normalizeEmail } from "@/lib/demo-accounts";
 import { requireRequestRole, unauthorizedResponse } from "@/lib/request-auth";
 
 export async function GET(request: Request) {
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
 
   const data = await listCandidates({
     search,
-    createdBy: scope === "mine" ? session.email : undefined,
+    createdBy: scope === "mine" ? normalizeEmail(session.email) : undefined,
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
   });
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
       location: body.location,
       notice_period: body.notice_period,
       status: "new",
-      created_by: session.email,
+      created_by: normalizeEmail(session.email),
     });
 
     if (body.initial_comment?.trim()) {

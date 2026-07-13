@@ -68,6 +68,7 @@ function mapDbCandidate(row: Record<string, unknown>): CandidateRecord {
     resume_url: row.resume_url as string | null,
     status: row.status as CandidateRecord["status"],
     created_by: row.created_by as string | null,
+    transfer_pending: (row.transfer_pending as CandidateRecord["transfer_pending"]) ?? null,
     created_at: row.created_at
       ? new Date(row.created_at as string).toISOString()
       : new Date().toISOString(),
