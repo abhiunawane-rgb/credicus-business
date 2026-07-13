@@ -24,8 +24,10 @@ enum CandidateSource {
   linkedin
   naukri
   referral
-  website
   walk_in
+  workindia
+  apna
+  resdex
   other
 }
 
@@ -97,6 +99,7 @@ model Candidate {
   name                String
   mobile              String
   alt_mobile          String?
+  aadhar_no           String?
   email               String?         @unique
   skills              String[]
   experience          Float

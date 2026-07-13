@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CHART_LOCATIONS,
   locationDailyCounts,
@@ -8,6 +8,36 @@ import {
 } from "@/lib/vendor-data";
 
 type Period = "current" | "previous";
+
+function toLocalDateString(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatLocalDateTime(date: Date) {
+  return date.toLocaleString(undefined, {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+function getPeriodRange(period: Period, now: Date) {
+  if (period === "previous") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const end = new Date(now.getFullYear(), now.getMonth(), 0);
+    return { start: toLocalDateString(start), end: toLocalDateString(end) };
+  }
+
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  return { start: toLocalDateString(start), end: toLocalDateString(now) };
+}
 
 function BarChart({ data, labels }: { data: number[]; labels: string[] }) {
   const max = Math.max(...data, 1);
@@ -96,6 +126,12 @@ export default function DashboardCharts({ appliedCount, selectedCount, rejectedC
   const [period, setPeriod] = useState<Period>("current");
   const [location, setLocation] = useState(CHART_LOCATIONS[0]);
   const [trendView, setTrendView] = useState<"all" | "applied" | "selected" | "rejected">("all");
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const trendSeries = useMemo(() => {
     const all = [
@@ -116,9 +152,8 @@ export default function DashboardCharts({ appliedCount, selectedCount, rejectedC
   const locationData = useMemo(() => locationDailyCounts[location] ?? [0, 0, 0, 0], [location]);
   const locationLabels = ["Day 1", "Day 2", "Day 3", "Day 4"];
 
-  const today = new Date();
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
-  const todayStr = today.toISOString().slice(0, 10);
+  const { start: rangeStart, end: rangeEnd } = getPeriodRange(period, now);
+  const currentDateTime = formatLocalDateTime(now);
 
   const metrics =
     period === "current"
@@ -149,7 +184,11 @@ export default function DashboardCharts({ appliedCount, selectedCount, rejectedC
           </button>
         </div>
         <div className="rounded-lg border border-credicus-line-subtle bg-white px-4 py-2 text-sm text-credicus-ink-secondary">
-          {monthStart} — {todayStr}
+          <span className="font-medium text-credicus-ink">{currentDateTime}</span>
+          <span className="mx-2 text-credicus-ink-muted">|</span>
+          <span>
+            {rangeStart} — {rangeEnd}
+          </span>
         </div>
       </div>
 

@@ -19,9 +19,7 @@ const recruiterNav: NavGroup[] = [
     label: "Main",
     items: [
       { href: "/dashboard/recruiter", label: "Dashboard", icon: "layoutGrid" },
-      { href: "/dashboard/recruiter/vendor-jobs", label: "Job Openings", icon: "briefcase" },
       { href: "/dashboard/recruiter/candidates", label: "Candidates", icon: "users" },
-      { href: "/dashboard/recruiter/vendor-users", label: "Partner Users", icon: "user" },
     ],
   },
   {
@@ -30,16 +28,9 @@ const recruiterNav: NavGroup[] = [
     items: [
       { href: "/dashboard/recruiter/candidates/new", label: "Add Candidate", icon: "userPlus" },
       { href: "/dashboard/recruiter/invitations", label: "Invitations", icon: "send" },
+      { href: "/dashboard/recruiter/transfers", label: "Transfer Requests", icon: "userCheck" },
       { href: "/dashboard/recruiter/talentpool", label: "Talent Pool", icon: "users" },
       { href: "/dashboard/recruiter/follow-ups", label: "Follow-ups", icon: "calendar" },
-    ],
-  },
-  {
-    id: "tools",
-    label: "Tools",
-    items: [
-      { href: "/dashboard/recruiter/upload", label: "Import Excel", icon: "fileSpreadsheet" },
-      { href: "/dashboard/recruiter/resumes", label: "Resumes", icon: "fileText" },
     ],
   },
 ];
@@ -88,6 +79,7 @@ export function pageTitleFromPath(pathname: string, role: UserRole): string {
 
   if (pathname.includes("/settings")) return "Settings";
   if (pathname.includes("/candidates/new")) return "Add Candidate";
+  if (pathname.includes("/transfers")) return "Transfer Requests";
   if (pathname.match(/\/candidates\/[^/]+$/)) return "Candidate Detail";
 
   return "Dashboard";

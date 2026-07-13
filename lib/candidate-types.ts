@@ -16,6 +16,7 @@ export type CandidateRecord = {
   name: string;
   mobile: string;
   alt_mobile?: string | null;
+  aadhar_no?: string | null;
   email?: string | null;
   skills: string[];
   experience: number;
@@ -60,6 +61,20 @@ export type EmployeeRecord = {
   joining_date?: string | null;
   status: string;
   created_at: string;
+};
+
+export type TransferRequestStatus = "pending" | "approved" | "rejected";
+
+export type CandidateTransferRecord = {
+  id: string;
+  candidate_id: string;
+  candidate_name: string;
+  from_owner: string;
+  requested_by: string;
+  status: TransferRequestStatus;
+  message?: string | null;
+  created_at: string;
+  resolved_at?: string | null;
 };
 
 export const STAGE_LABELS: Record<CandidateStage, string> = {
@@ -156,7 +171,9 @@ export const SOURCE_OPTIONS = [
   { value: "walk_in", label: "Walk-in" },
   { value: "referral", label: "Referral" },
   { value: "linkedin", label: "LinkedIn" },
-  { value: "website", label: "Website" },
+  { value: "workindia", label: "Workindia" },
+  { value: "apna", label: "Apna" },
+  { value: "resdex", label: "Resdex" },
   { value: "other", label: "Other" },
 ];
 

@@ -16,3 +16,19 @@ export function paginate<T>(items: T[], page: number, pageSize: number): T[] {
 export function totalPages(count: number, pageSize: number): number {
   return Math.max(1, Math.ceil(count / pageSize));
 }
+
+export function toLocalDateKey(isoDate: string): string {
+  const date = new Date(isoDate);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function matchesDateRange(isoDate: string, dateFrom?: string, dateTo?: string): boolean {
+  if (!dateFrom && !dateTo) return true;
+  const key = toLocalDateKey(isoDate);
+  if (dateFrom && key < dateFrom) return false;
+  if (dateTo && key > dateTo) return false;
+  return true;
+}

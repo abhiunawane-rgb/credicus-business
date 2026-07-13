@@ -18,6 +18,10 @@ type ListFilterBarProps = {
   onRefresh?: () => void;
   refreshing?: boolean;
   filters?: FilterSelectConfig[];
+  dateFrom?: string;
+  dateTo?: string;
+  onDateFromChange?: (value: string) => void;
+  onDateToChange?: (value: string) => void;
   pageSize?: number;
   pageSizeOptions?: number[];
   onPageSizeChange?: (size: number) => void;
@@ -32,6 +36,10 @@ export default function ListFilterBar({
   onRefresh,
   refreshing = false,
   filters = [],
+  dateFrom,
+  dateTo,
+  onDateFromChange,
+  onDateToChange,
   pageSize,
   pageSizeOptions = [10, 25, 50],
   onPageSizeChange,
@@ -82,6 +90,32 @@ export default function ListFilterBar({
               </select>
             </label>
           ))}
+
+          {onDateFromChange ? (
+            <label className="flex items-center gap-2 text-sm text-credicus-ink-secondary">
+              <span className="hidden sm:inline">From</span>
+              <input
+                type="date"
+                value={dateFrom ?? ""}
+                onChange={(e) => onDateFromChange(e.target.value)}
+                className="rounded-lg border border-credicus-line-subtle bg-white px-3 py-2 text-sm outline-none focus:border-credicus-primary"
+                aria-label="Filter from date"
+              />
+            </label>
+          ) : null}
+
+          {onDateToChange ? (
+            <label className="flex items-center gap-2 text-sm text-credicus-ink-secondary">
+              <span className="hidden sm:inline">To</span>
+              <input
+                type="date"
+                value={dateTo ?? ""}
+                onChange={(e) => onDateToChange(e.target.value)}
+                className="rounded-lg border border-credicus-line-subtle bg-white px-3 py-2 text-sm outline-none focus:border-credicus-primary"
+                aria-label="Filter to date"
+              />
+            </label>
+          ) : null}
 
           {pageSize !== undefined && onPageSizeChange ? (
             <label className="flex items-center gap-2 text-sm text-credicus-ink-secondary">

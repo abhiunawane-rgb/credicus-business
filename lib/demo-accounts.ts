@@ -14,6 +14,10 @@ export function displayNameForEmail(email: string): string {
   return demoAccounts.find((account) => account.email === email)?.name ?? email.split("@")[0];
 }
 
+export function recruiterEmails(): string[] {
+  return demoAccounts.filter((account) => account.role === "recruiter").map((account) => account.email);
+}
+
 export const demoAccounts: DemoAccount[] = [
   {
     id: "user-recruiter-1",
@@ -23,6 +27,15 @@ export const demoAccounts: DemoAccount[] = [
     roleLabel: "Recruiter",
     name: "Arjun Mehta",
     description: "Upload candidates, manage resumes, track leads",
+  },
+  {
+    id: "user-recruiter-2",
+    email: "recruiter2@credicus.com",
+    password: "Recruiter@123",
+    role: "recruiter",
+    roleLabel: "Recruiter",
+    name: "Priya Sharma",
+    description: "Manage assigned candidates and transfer requests",
   },
   {
     id: "user-team-leader-1",

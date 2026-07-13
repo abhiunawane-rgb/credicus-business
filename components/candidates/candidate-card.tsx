@@ -14,6 +14,7 @@ import CommentSection from "@/components/candidates/comment-section";
 import StageActions from "@/components/candidates/stage-actions";
 import type { CandidateRecord, CandidateStage, CommentRecord } from "@/lib/candidate-types";
 import { displayCandidateName, STAGE_LABELS } from "@/lib/candidate-types";
+import { displayNameForEmail } from "@/lib/demo-accounts";
 
 type CandidateCardProps = {
   candidate: CandidateRecord;
@@ -21,10 +22,14 @@ type CandidateCardProps = {
   currentUserEmail?: string;
   readOnly?: boolean;
   commentsExpanded?: boolean;
+  showAddedBy?: boolean;
+  enableTransferRequest?: boolean;
+  transferPending?: boolean;
   variant?: "light" | "dark";
   onStageChange: (stage: CandidateStage, rejectionReason?: string) => Promise<void>;
   onAddComment: (content: string) => Promise<void>;
   onDelete?: () => Promise<void>;
+  onRequestTransfer?: () => Promise<void>;
 };
 
 function initials(name: string) {
@@ -49,12 +54,17 @@ export default function CandidateCard({
   currentUserEmail,
   readOnly = false,
   commentsExpanded = false,
+  showAddedBy = false,
+  enableTransferRequest = false,
+  transferPending = false,
   variant = "light",
   onStageChange,
   onAddComment,
   onDelete,
+  onRequestTransfer,
 }: CandidateCardProps) {
   const [busy, setBusy] = useState(false);
+  const [transferBusy, setTransferBusy] = useState(false);
   const isDark = variant === "dark";
   const displayName = displayCandidateName(candidate);
 
@@ -67,6 +77,20 @@ export default function CandidateCard({
       setBusy(false);
     }
   }
+
+  async function handleTransferRequest() {
+    if (!onRequestTransfer || transferPending || transferBusy) return;
+    setTransferBusy(true);
+    try {
+      await onRequestTransfer();
+    } finally {
+      setTransferBusy(false);
+    }
+  }
+
+  const isOwnCandidate = Boolean(
+    currentUserEmail && candidate.created_by && candidate.created_by === currentUserEmail,
+  );
 
   return (
     <article
@@ -123,6 +147,20 @@ export default function CandidateCard({
               <div className="grid grid-cols-[90px_1fr] gap-2">
                 <dt className={isDark ? "text-credicus-gray" : "text-credicus-gray"}>Education</dt>
                 <dd className={isDark ? "text-gray-200" : "text-gray-800"}>{candidate.education}</dd>
+              </div>
+            ) : null}
+            {candidate.aadhar_no ? (
+              <div className="grid grid-cols-[90px_1fr] gap-2">
+                <dt className={isDark ? "text-credicus-gray" : "text-credicus-gray"}>Aadhar No.</dt>
+                <dd className={isDark ? "text-gray-200" : "text-gray-800"}>{candidate.aadhar_no}</dd>
+              </div>
+            ) : null}
+            {showAddedBy ? (
+              <div className="grid grid-cols-[90px_1fr] gap-2">
+                <dt className={isDark ? "text-credicus-gray" : "text-credicus-gray"}>Added by</dt>
+                <dd className={isDark ? "text-gray-200" : "text-gray-800"}>
+                  {candidate.created_by ? displayNameForEmail(candidate.created_by) : "Unknown"}
+                </dd>
               </div>
             ) : null}
             {candidate.preferred_locations.length > 0 ? (
@@ -239,11 +277,33 @@ export default function CandidateCard({
         </div>
       ) : (
         <div
-          className={`border-t px-4 py-2.5 text-xs ${
+          className={`border-t px-4 py-3 ${
             isDark ? "ui-alert-info-dark border-x-0 border-b-0" : "ui-alert-info border-x-0 border-b-0"
           }`}
         >
-          Read-only talent pool view — request Team Leader to update records.
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs">
+              {enableTransferRequest
+                ? "Shared talent pool — request transfer to process this candidate in your list after owner approval."
+                : "Read-only talent pool view."}
+            </p>
+            {enableTransferRequest && !isOwnCandidate ? (
+              transferPending ? (
+                <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">
+                  Transfer pending approval
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void handleTransferRequest()}
+                  disabled={transferBusy}
+                  className="ui-button-primary px-3 py-1.5 text-xs"
+                >
+                  {transferBusy ? "Requesting..." : "Request transfer"}
+                </button>
+              )
+            ) : null}
+          </div>
         </div>
       )}
     </article>

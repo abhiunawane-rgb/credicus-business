@@ -8,7 +8,16 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search") ?? undefined;
-  const data = await listCandidates(search);
+  const scope = searchParams.get("scope") ?? "all";
+  const dateFrom = searchParams.get("dateFrom") ?? undefined;
+  const dateTo = searchParams.get("dateTo") ?? undefined;
+
+  const data = await listCandidates({
+    search,
+    createdBy: scope === "mine" ? session.email : undefined,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+  });
   return NextResponse.json({ data });
 }
 
@@ -18,6 +27,7 @@ type CreateBody = {
   name?: string;
   mobile?: string;
   alt_mobile?: string | null;
+  aadhar_no?: string | null;
   email?: string | null;
   skills?: string[];
   experience?: number;
@@ -50,6 +60,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "First name, last name, and mobile are required." }, { status: 400 });
   }
 
+  if (!body.source?.trim()) {
+    return NextResponse.json({ error: "Source is required." }, { status: 400 });
+  }
+
   const experience =
     typeof body.experience === "number" && !Number.isNaN(body.experience) ? body.experience : 0;
 
@@ -60,10 +74,11 @@ export async function POST(request: Request) {
       name: body.name.trim(),
       mobile: body.mobile.trim(),
       alt_mobile: body.alt_mobile,
+      aadhar_no: body.aadhar_no || null,
       email: body.email,
       skills: body.skills ?? [],
       experience,
-      source: body.source ?? "other",
+      source: body.source.trim(),
       portal_id: body.portal_id,
       process: body.process,
       interview_date: body.interview_date,

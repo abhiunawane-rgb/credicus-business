@@ -14,10 +14,17 @@ export default async function RecruiterTalentPoolPage() {
       <DashboardHeader
         iconName="database"
         title="Talent Pool"
-        description="View all candidates in the shared pool. Contact Team Leader to request ownership changes."
-        tip="This is a read-only view. Use Candidates tab to edit stages and add comment logs."
+        description="Browse all candidates in the shared database. Request transfer to process candidates owned by others."
+        tip="After the owner approves, the candidate appears in your Candidates list and ownership updates here."
       />
-      <CandidateWorkbench currentUserEmail={session.email} readOnly />
+      <CandidateWorkbench
+        currentUserEmail={session.email}
+        readOnly
+        scope="all"
+        showAddedBy
+        showDateFilters
+        enableTransferRequests
+      />
     </section>
   );
 }

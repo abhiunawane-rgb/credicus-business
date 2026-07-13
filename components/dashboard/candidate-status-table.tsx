@@ -12,11 +12,15 @@ import {
   STAGE_LABELS,
   type CandidateStage,
 } from "@/lib/candidate-types";
-import { matchesSearch, paginate, totalPages } from "@/lib/list-filters";
+import { matchesSearch, paginate, toLocalDateKey, totalPages } from "@/lib/list-filters";
+import { displayNameForEmail } from "@/lib/demo-accounts";
 
 type CandidateStatusTableProps = {
   detailBasePath: string;
   readOnly?: boolean;
+  scope?: "mine" | "all";
+  showAddedBy?: boolean;
+  showDateFilters?: boolean;
 };
 
 const STAGE_FILTER_OPTIONS: Array<{ value: string; label: string }> = [
@@ -31,10 +35,18 @@ function statusBadgeClass(status: CandidateRecord["status"]): string {
   return "border-credicus-line-subtle bg-credicus-surface text-credicus-ink-secondary";
 }
 
-export default function CandidateStatusTable({ detailBasePath, readOnly = false }: CandidateStatusTableProps) {
+export default function CandidateStatusTable({
+  detailBasePath,
+  readOnly = false,
+  scope = "all",
+  showAddedBy = false,
+  showDateFilters = false,
+}: CandidateStatusTableProps) {
   const [rows, setRows] = useState<CandidateRecord[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -42,13 +54,16 @@ export default function CandidateStatusTable({ detailBasePath, readOnly = false 
   const loadRows = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/candidates", { credentials: "same-origin" });
+      const params = new URLSearchParams({ scope });
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (dateTo) params.set("dateTo", dateTo);
+      const response = await fetch(`/api/candidates?${params.toString()}`, { credentials: "same-origin" });
       const payload = (await response.json()) as { data?: CandidateRecord[] };
       setRows(payload.data ?? []);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [scope, dateFrom, dateTo]);
 
   useEffect(() => {
     void loadRows();
@@ -76,15 +91,21 @@ export default function CandidateStatusTable({ detailBasePath, readOnly = false 
   function resetFilters() {
     setSearch("");
     setStatusFilter("all");
+    setDateFrom("");
+    setDateTo("");
     setPage(1);
   }
+
+  const columnCount = showAddedBy ? 9 : 8;
 
   return (
     <div className="space-y-4">
       <div>
         <h2 className="text-2xl font-bold text-credicus-ink">Candidates</h2>
         <p className="mt-1 text-sm text-credicus-gray">
-          Track application progress across your hiring pipeline.
+          {scope === "mine"
+            ? "Candidates you added. Use date filters to narrow results."
+            : "Track application progress across your hiring pipeline."}
         </p>
       </div>
 
@@ -116,6 +137,24 @@ export default function CandidateStatusTable({ detailBasePath, readOnly = false 
         }}
         onReset={resetFilters}
         resultCount={filtered.length}
+        dateFrom={showDateFilters ? dateFrom : undefined}
+        dateTo={showDateFilters ? dateTo : undefined}
+        onDateFromChange={
+          showDateFilters
+            ? (value) => {
+                setDateFrom(value);
+                setPage(1);
+              }
+            : undefined
+        }
+        onDateToChange={
+          showDateFilters
+            ? (value) => {
+                setDateTo(value);
+                setPage(1);
+              }
+            : undefined
+        }
       />
 
       <div className="ui-card overflow-hidden">
@@ -130,19 +169,20 @@ export default function CandidateStatusTable({ detailBasePath, readOnly = false 
                 <th className="px-4 py-3">Applied For</th>
                 <th className="px-4 py-3">Preferred Date</th>
                 <th className="px-4 py-3">Location</th>
+                {showAddedBy ? <th className="px-4 py-3">Added By</th> : null}
                 <th className="px-4 py-3">Action</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-credicus-gray">
+                  <td colSpan={columnCount} className="px-4 py-10 text-center text-credicus-gray">
                     Loading candidates...
                   </td>
                 </tr>
               ) : pageRows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-credicus-gray">
+                  <td colSpan={columnCount} className="px-4 py-10 text-center text-credicus-gray">
                     No candidates match your filters.
                   </td>
                 </tr>
@@ -166,11 +206,16 @@ export default function CandidateStatusTable({ detailBasePath, readOnly = false 
                       <td className="px-4 py-3 text-credicus-ink-secondary">{row.mobile}</td>
                       <td className="px-4 py-3 text-credicus-ink-secondary">{row.process ?? "—"}</td>
                       <td className="px-4 py-3 text-credicus-ink-secondary">
-                        {row.interview_date ? new Date(row.interview_date).toISOString().slice(0, 10) : "—"}
+                        {row.interview_date ? toLocalDateKey(row.interview_date) : "—"}
                       </td>
                       <td className="px-4 py-3 text-credicus-ink-secondary">
                         {row.location ?? row.preferred_locations[0] ?? "—"}
                       </td>
+                      {showAddedBy ? (
+                        <td className="px-4 py-3 text-credicus-ink-secondary">
+                          {row.created_by ? displayNameForEmail(row.created_by) : "—"}
+                        </td>
+                      ) : null}
                       <td className="px-4 py-3">
                         <Link
                           href={`${detailBasePath}/${row.id}`}

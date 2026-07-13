@@ -18,8 +18,9 @@ const initialForm = {
   last_name: "",
   mobile: "",
   alt_mobile: "",
+  aadhar_no: "",
   email: "",
-  source: "naukri",
+  source: "",
   portal_id: "",
   process: "",
   interview_date: "",
@@ -36,6 +37,7 @@ const initialForm = {
 
 const optionalFields: [keyof typeof initialForm, string, string][] = [
   ["alt_mobile", "Alt mobile", "tel"],
+  ["aadhar_no", "Aadhar No.", "text"],
   ["email", "Email", "email"],
   ["portal_id", "Portal ID", "text"],
   ["process", "Process", "text"],
@@ -75,6 +77,7 @@ export default function AddCandidateForm({ onSuccess }: Props) {
     if (!form.first_name.trim()) next.first_name = "First name is required.";
     if (!form.last_name.trim()) next.last_name = "Last name is required.";
     if (!form.mobile.trim()) next.mobile = "Mobile number is required.";
+    if (!form.source.trim()) next.source = "Source is required.";
     setFieldErrors(next);
     if (Object.keys(next).length > 0) {
       setError("Please fix the highlighted fields before saving.");
@@ -103,6 +106,7 @@ export default function AddCandidateForm({ onSuccess }: Props) {
           name,
           mobile: form.mobile.replace(/\s/g, ""),
           alt_mobile: form.alt_mobile || null,
+          aadhar_no: form.aadhar_no.replace(/\s/g, "") || null,
           email: form.email || null,
           source: form.source,
           portal_id: form.portal_id || null,
@@ -152,7 +156,7 @@ export default function AddCandidateForm({ onSuccess }: Props) {
         <BackLink href="/dashboard/recruiter/candidates" label="Back to candidates" />
       </div>
 
-      <p className="ui-field-hint">Only name and mobile are required. Everything else is optional.</p>
+      <p className="ui-field-hint">Name, mobile, and source are required. Everything else is optional.</p>
 
       <section className="ui-proximity-group" aria-labelledby="required-fields-title">
         <div>
@@ -193,6 +197,35 @@ export default function AddCandidateForm({ onSuccess }: Props) {
               ) : null}
             </div>
           ))}
+
+          <div className="ui-field-group">
+            <label htmlFor="field-source" className="ui-label ui-label-required">
+              Source
+            </label>
+            <select
+              id="field-source"
+              value={form.source}
+              onChange={(e) => update("source", e.target.value)}
+              className="ui-input"
+              aria-required
+              aria-invalid={Boolean(fieldErrors.source)}
+              aria-describedby={fieldErrors.source ? "source-error" : undefined}
+            >
+              <option value="" disabled>
+                Select source
+              </option>
+              {SOURCE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            {fieldErrors.source ? (
+              <p id="source-error" className="ui-field-error" role="alert">
+                {fieldErrors.source}
+              </p>
+            ) : null}
+          </div>
         </div>
       </section>
 
@@ -212,30 +245,15 @@ export default function AddCandidateForm({ onSuccess }: Props) {
               <input
                 id={`field-${key}`}
                 type={type}
+                inputMode={key === "aadhar_no" ? "numeric" : undefined}
+                maxLength={key === "aadhar_no" ? 12 : undefined}
+                placeholder={key === "aadhar_no" ? "12-digit Aadhar (optional)" : undefined}
                 value={form[key]}
                 onChange={(e) => update(key, e.target.value)}
                 className="ui-input"
               />
             </div>
           ))}
-
-          <div className="ui-field-group">
-            <label htmlFor="field-source" className="ui-label">
-              Source
-            </label>
-            <select
-              id="field-source"
-              value={form.source}
-              onChange={(e) => update("source", e.target.value)}
-              className="ui-input"
-            >
-              {SOURCE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
 
           <div className="ui-field-group md:col-span-2">
             <label htmlFor="field-comments" className="ui-label">

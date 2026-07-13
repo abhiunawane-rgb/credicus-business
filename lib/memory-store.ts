@@ -1,5 +1,12 @@
 import { randomUUID } from "node:crypto";
-import type { CandidateRecord, CommentRecord, EmployeeRecord } from "@/lib/candidate-types";
+import type {
+  CandidateRecord,
+  CandidateTransferRecord,
+  CommentRecord,
+  EmployeeRecord,
+  TransferRequestStatus,
+} from "@/lib/candidate-types";
+import { toLocalDateKey } from "@/lib/list-filters";
 
 const now = () => new Date().toISOString();
 
@@ -49,7 +56,7 @@ const seedCandidates: CandidateRecord[] = [
     call_status: "confirmed",
     interview_date: new Date().toISOString(),
     status: "interviewed",
-    created_by: "recruiter@credicus.com",
+    created_by: "recruiter2@credicus.com",
     created_at: now(),
     updated_at: now(),
   },
@@ -68,7 +75,7 @@ const seedCandidates: CandidateRecord[] = [
     salary: "6 Lacs",
     location: "Ahmedabad, Gujarat, India",
     status: "shortlisted",
-    created_by: "teamleader@credicus.com",
+    created_by: "recruiter2@credicus.com",
     created_at: now(),
     updated_at: now(),
   },
@@ -166,6 +173,7 @@ type MemoryStore = {
   comments: CommentRecord[];
   employees: EmployeeRecord[];
   contacts: ContactRecord[];
+  transfers: CandidateTransferRecord[];
 };
 
 const globalStore = globalThis as unknown as { __credicusStore?: MemoryStore };
@@ -177,13 +185,37 @@ function getStore(): MemoryStore {
       comments: [...seedComments],
       employees: [...seedEmployees],
       contacts: [],
+      transfers: [],
     };
   }
   return globalStore.__credicusStore;
 }
 
-export function memoryListCandidates(search?: string): CandidateRecord[] {
-  const list = getStore().candidates;
+export type ListCandidatesFilters = {
+  search?: string;
+  createdBy?: string;
+  dateFrom?: string;
+  dateTo?: string;
+};
+
+function matchesCreatedDate(candidate: CandidateRecord, dateFrom?: string, dateTo?: string): boolean {
+  if (!dateFrom && !dateTo) return true;
+  const key = toLocalDateKey(candidate.created_at);
+  if (dateFrom && key < dateFrom) return false;
+  if (dateTo && key > dateTo) return false;
+  return true;
+}
+
+export function memoryListCandidates(filters: ListCandidatesFilters = {}): CandidateRecord[] {
+  const { search, createdBy, dateFrom, dateTo } = filters;
+  let list = getStore().candidates;
+
+  if (createdBy) {
+    list = list.filter((candidate) => candidate.created_by === createdBy);
+  }
+
+  list = list.filter((candidate) => matchesCreatedDate(candidate, dateFrom, dateTo));
+
   if (!search?.trim()) return list;
   const q = search.toLowerCase();
   return list.filter(
@@ -284,4 +316,81 @@ export function memoryCreateContact(data: {
   };
   getStore().contacts.unshift(record);
   return { id: record.id, name: record.name, email: record.email };
+}
+
+export type ListTransferFilters = {
+  fromOwner?: string;
+  requestedBy?: string;
+  candidateId?: string;
+  status?: TransferRequestStatus;
+};
+
+export function memoryListTransfers(filters: ListTransferFilters = {}): CandidateTransferRecord[] {
+  let list = [...getStore().transfers];
+  if (filters.fromOwner) {
+    list = list.filter((transfer) => transfer.from_owner === filters.fromOwner);
+  }
+  if (filters.requestedBy) {
+    list = list.filter((transfer) => transfer.requested_by === filters.requestedBy);
+  }
+  if (filters.candidateId) {
+    list = list.filter((transfer) => transfer.candidate_id === filters.candidateId);
+  }
+  if (filters.status) {
+    list = list.filter((transfer) => transfer.status === filters.status);
+  }
+  return list.sort((a, b) => b.created_at.localeCompare(a.created_at));
+}
+
+export function memoryGetTransfer(id: string): CandidateTransferRecord | undefined {
+  return getStore().transfers.find((transfer) => transfer.id === id);
+}
+
+export function memoryFindPendingTransfer(
+  candidateId: string,
+  requestedBy: string,
+): CandidateTransferRecord | undefined {
+  return getStore().transfers.find(
+    (transfer) =>
+      transfer.candidate_id === candidateId &&
+      transfer.requested_by === requestedBy &&
+      transfer.status === "pending",
+  );
+}
+
+export function memoryCreateTransferRequest(data: {
+  candidate_id: string;
+  candidate_name: string;
+  from_owner: string;
+  requested_by: string;
+  message?: string | null;
+}): CandidateTransferRecord {
+  const record: CandidateTransferRecord = {
+    id: randomUUID(),
+    candidate_id: data.candidate_id,
+    candidate_name: data.candidate_name,
+    from_owner: data.from_owner,
+    requested_by: data.requested_by,
+    status: "pending",
+    message: data.message ?? null,
+    created_at: now(),
+    resolved_at: null,
+  };
+  getStore().transfers.unshift(record);
+  return record;
+}
+
+export function memoryResolveTransfer(
+  id: string,
+  status: Exclude<TransferRequestStatus, "pending">,
+): CandidateTransferRecord | null {
+  const store = getStore();
+  const index = store.transfers.findIndex((transfer) => transfer.id === id);
+  if (index < 0) return null;
+  store.transfers[index] = {
+    ...store.transfers[index],
+    status,
+    resolved_at: now(),
+  };
+  return store.transfers[index];
 }

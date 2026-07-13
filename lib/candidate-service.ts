@@ -47,6 +47,7 @@ function mapDbCandidate(row: Record<string, unknown>): CandidateRecord {
     name: String(row.name),
     mobile: String(row.mobile),
     alt_mobile: row.alt_mobile as string | null,
+    aadhar_no: row.aadhar_no as string | null,
     email: row.email as string | null,
     skills: (row.skills as string[]) ?? [],
     experience: Number(row.experience),
@@ -74,19 +75,40 @@ function mapDbCandidate(row: Record<string, unknown>): CandidateRecord {
   };
 }
 
-export async function listCandidates(search?: string): Promise<CandidateRecord[]> {
+export type ListCandidatesOptions = {
+  search?: string;
+  createdBy?: string;
+  dateFrom?: string;
+  dateTo?: string;
+};
+
+export async function listCandidates(options: ListCandidatesOptions = {}): Promise<CandidateRecord[]> {
+  const { search, createdBy, dateFrom, dateTo } = options;
+
   if (useDatabase()) {
     try {
-      const where = search?.trim()
-        ? {
-            OR: [
-              { name: { contains: search, mode: "insensitive" as const } },
-              { mobile: { contains: search } },
-              { email: { contains: search, mode: "insensitive" as const } },
-            ],
-          }
-        : {};
-      const rows = await prisma.candidate.findMany({ where, orderBy: { name: "desc" } });
+      const where: Record<string, unknown> = {};
+
+      if (search?.trim()) {
+        where.OR = [
+          { name: { contains: search, mode: "insensitive" as const } },
+          { mobile: { contains: search } },
+          { email: { contains: search, mode: "insensitive" as const } },
+        ];
+      }
+
+      if (createdBy) {
+        where.created_by = createdBy;
+      }
+
+      if (dateFrom || dateTo) {
+        where.created_at = {
+          ...(dateFrom ? { gte: new Date(`${dateFrom}T00:00:00.000`) } : {}),
+          ...(dateTo ? { lte: new Date(`${dateTo}T23:59:59.999`) } : {}),
+        };
+      }
+
+      const rows = await prisma.candidate.findMany({ where, orderBy: { created_at: "desc" } });
       if (rows.length > 0) {
         return rows.map((r) =>
           normalizeCandidateRecord(mapDbCandidate(r as unknown as Record<string, unknown>)),
@@ -96,7 +118,7 @@ export async function listCandidates(search?: string): Promise<CandidateRecord[]
       handleDbError(error);
     }
   }
-  return memoryListCandidates(search).map(normalizeCandidateRecord);
+  return memoryListCandidates({ search, createdBy, dateFrom, dateTo }).map(normalizeCandidateRecord);
 }
 
 export async function getCandidate(id: string): Promise<CandidateRecord | null> {
@@ -125,6 +147,7 @@ export async function createCandidate(
     }),
     mobile: data.mobile,
     alt_mobile: data.alt_mobile ?? null,
+    aadhar_no: data.aadhar_no ?? null,
     email: data.email ?? null,
     skills: data.skills ?? [],
     experience: data.experience,
@@ -152,11 +175,14 @@ export async function createCandidate(
           name: payload.name,
           mobile: payload.mobile,
           email: payload.email,
+          alt_mobile: payload.alt_mobile,
+          aadhar_no: payload.aadhar_no,
           skills: payload.skills,
           experience: payload.experience,
           source: payload.source,
           resume_url: payload.resume_url,
           status: payload.status,
+          created_by: payload.created_by,
         },
       });
       return normalizeCandidateRecord(mapDbCandidate(row as unknown as Record<string, unknown>));
@@ -193,11 +219,14 @@ export async function updateCandidate(
           name: patch.name,
           mobile: patch.mobile,
           email: patch.email,
+          alt_mobile: patch.alt_mobile,
+          aadhar_no: patch.aadhar_no,
           skills: patch.skills,
           experience: patch.experience,
           source: patch.source as never,
           resume_url: patch.resume_url,
           status: patch.status as never,
+          created_by: patch.created_by,
         },
       });
       return mapDbCandidate(row as unknown as Record<string, unknown>);

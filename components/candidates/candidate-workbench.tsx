@@ -7,7 +7,7 @@ import CandidateCard from "@/components/candidates/candidate-card";
 import ListFilterBar from "@/components/dashboard/list-filter-bar";
 import { useActionFeedback } from "@/components/providers/action-feedback-provider";
 import EmptyState from "@/components/ui/empty-state";
-import type { CandidateRecord, CandidateStage, CommentRecord } from "@/lib/candidate-types";
+import type { CandidateRecord, CandidateStage, CandidateTransferRecord, CommentRecord } from "@/lib/candidate-types";
 import { displayCandidateName, STAGE_LABELS } from "@/lib/candidate-types";
 import { actionMessages } from "@/lib/action-messages";
 import { matchesSearch } from "@/lib/list-filters";
@@ -15,22 +15,39 @@ import { matchesSearch } from "@/lib/list-filters";
 type CandidateWorkbenchProps = {
   readOnly?: boolean;
   currentUserEmail?: string;
+  scope?: "mine" | "all";
+  showAddedBy?: boolean;
+  showDateFilters?: boolean;
+  enableTransferRequests?: boolean;
 };
 
-export default function CandidateWorkbench({ readOnly = false, currentUserEmail }: CandidateWorkbenchProps) {
+export default function CandidateWorkbench({
+  readOnly = false,
+  currentUserEmail,
+  scope = "all",
+  showAddedBy = false,
+  showDateFilters = false,
+  enableTransferRequests = false,
+}: CandidateWorkbenchProps) {
   const { confirm, notify } = useActionFeedback();
   const [candidates, setCandidates] = useState<CandidateRecord[]>([]);
   const [commentsMap, setCommentsMap] = useState<Record<string, CommentRecord[]>>({});
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pendingTransferIds, setPendingTransferIds] = useState<Set<string>>(new Set());
 
   const loadCandidates = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/candidates", { credentials: "same-origin" });
+      const params = new URLSearchParams({ scope });
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (dateTo) params.set("dateTo", dateTo);
+      const response = await fetch(`/api/candidates?${params.toString()}`, { credentials: "same-origin" });
       const payload = (await response.json()) as { data?: CandidateRecord[]; error?: string };
       if (!response.ok) {
         setError(payload.error ?? "Failed to load candidates.");
@@ -52,11 +69,31 @@ export default function CandidateWorkbench({ readOnly = false, currentUserEmail 
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [scope, dateFrom, dateTo]);
 
   useEffect(() => {
     void loadCandidates();
   }, [loadCandidates]);
+
+  const loadPendingTransfers = useCallback(async () => {
+    if (!enableTransferRequests) {
+      setPendingTransferIds(new Set());
+      return;
+    }
+    try {
+      const response = await fetch("/api/candidates/transfers?view=outgoing&status=pending", {
+        credentials: "same-origin",
+      });
+      const payload = (await response.json()) as { data?: CandidateTransferRecord[] };
+      setPendingTransferIds(new Set((payload.data ?? []).map((transfer) => transfer.candidate_id)));
+    } catch {
+      setPendingTransferIds(new Set());
+    }
+  }, [enableTransferRequests]);
+
+  useEffect(() => {
+    void loadPendingTransfers();
+  }, [loadPendingTransfers]);
 
   const filteredCandidates = useMemo(() => {
     return candidates.filter((candidate) => {
@@ -121,6 +158,22 @@ export default function CandidateWorkbench({ readOnly = false, currentUserEmail 
     void loadCandidates();
   }
 
+  async function handleRequestTransfer(candidateId: string, candidateName: string) {
+    const response = await fetch("/api/candidates/transfers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ candidateId }),
+    });
+    const body = (await response.json()) as { error?: string };
+    if (!response.ok) {
+      notify.error(body.error ?? "Could not submit transfer request.");
+      return;
+    }
+    notify.success(`Transfer requested for ${candidateName}. Waiting for owner approval.`);
+    setPendingTransferIds((prev) => new Set(prev).add(candidateId));
+  }
+
   const stageOptions = [
     { value: "all", label: "All stages" },
     ...Object.entries(STAGE_LABELS).map(([value, label]) => ({ value, label })),
@@ -146,8 +199,14 @@ export default function CandidateWorkbench({ readOnly = false, currentUserEmail 
         onReset={() => {
           setSearch("");
           setStageFilter("all");
+          setDateFrom("");
+          setDateTo("");
         }}
         resultCount={filteredCandidates.length}
+        dateFrom={showDateFilters ? dateFrom : undefined}
+        dateTo={showDateFilters ? dateTo : undefined}
+        onDateFromChange={showDateFilters ? setDateFrom : undefined}
+        onDateToChange={showDateFilters ? setDateTo : undefined}
       />
 
       {loading ? (
@@ -208,10 +267,18 @@ export default function CandidateWorkbench({ readOnly = false, currentUserEmail 
               comments={commentsMap[candidate.id] ?? []}
               currentUserEmail={currentUserEmail}
               readOnly={readOnly}
+              showAddedBy={showAddedBy}
+              enableTransferRequest={enableTransferRequests}
+              transferPending={pendingTransferIds.has(candidate.id)}
               variant="light"
               onStageChange={(stage, reason) => handleStageChange(candidate.id, stage, reason)}
               onAddComment={(content) => handleAddComment(candidate.id, content)}
               onDelete={readOnly ? undefined : () => handleDelete(candidate.id, displayCandidateName(candidate))}
+              onRequestTransfer={
+                enableTransferRequests
+                  ? () => handleRequestTransfer(candidate.id, displayCandidateName(candidate))
+                  : undefined
+              }
             />
           </div>
         ))}
