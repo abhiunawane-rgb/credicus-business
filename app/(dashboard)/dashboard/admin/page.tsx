@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { BarChart3, Database, UserCog, UserPlus } from "lucide-react";
 import AdminPanel from "@/components/admin/admin-panel";
+import CatalogManager from "@/components/admin/catalog-manager";
 import ClientSummaryTable from "@/components/dashboard/client-summary-table";
 import RecruiterSummaryTable from "@/components/dashboard/recruiter-summary-table";
 import TodaySummary from "@/components/dashboard/today-summary";
@@ -45,6 +46,7 @@ export default async function AdminDashboardPage() {
       <RecruiterSummaryTable />
       <ClientSummaryTable title="All Client-wise Summary" />
 
+      <CatalogManager />
       <AdminPanel />
     </section>
   );

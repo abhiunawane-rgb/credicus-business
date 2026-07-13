@@ -28,6 +28,7 @@ type StatCardProps = {
   iconName: StatIconName;
   trend?: string;
   delay?: number;
+  onClick?: () => void;
 };
 
 function useCountUp(target: string, duration = 600) {
@@ -58,16 +59,13 @@ function useCountUp(target: string, duration = 600) {
   return display;
 }
 
-export default function StatCard({ label, value, iconName, trend, delay = 0 }: StatCardProps) {
+export default function StatCard({ label, value, iconName, trend, delay = 0, onClick }: StatCardProps) {
   const animatedValue = useCountUp(value);
   const Icon = resolveIcon(iconName);
+  const clickable = Boolean(onClick);
 
-  return (
-    <article
-      aria-label={`${label}: ${value}${trend ? `. ${trend}` : ""}`}
-      className="group ui-card relative overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:border-credicus-primary/30 hover:shadow-md"
-      style={{ animationDelay: `${delay}ms` }}
-    >
+  const content = (
+    <>
       <div className="relative flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-credicus-ink-muted">{label}</p>
@@ -82,6 +80,35 @@ export default function StatCard({ label, value, iconName, trend, delay = 0 }: S
           className="transition-transform duration-300 group-hover:scale-105"
         />
       </div>
+      {clickable ? (
+        <p className="mt-3 text-xs font-medium text-credicus-ink-muted group-hover:text-credicus-primary">
+          Click to view details
+        </p>
+      ) : null}
+    </>
+  );
+
+  if (clickable) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={`${label}: ${value}. Click to view details.`}
+        className="group ui-card relative w-full overflow-hidden p-5 text-left transition-all hover:-translate-y-0.5 hover:border-credicus-primary/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-credicus-primary"
+        style={{ animationDelay: `${delay}ms` }}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <article
+      aria-label={`${label}: ${value}${trend ? `. ${trend}` : ""}`}
+      className="group ui-card relative overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:border-credicus-primary/30 hover:shadow-md"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      {content}
     </article>
   );
 }

@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
-import { Phone, UserCheck, UserPlus, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import ClientSummaryTable from "@/components/dashboard/client-summary-table";
 import RecruiterSummaryTable from "@/components/dashboard/recruiter-summary-table";
-import TodaySummary from "@/components/dashboard/today-summary";
+import TeamLeaderDashboardMetrics from "@/components/dashboard/team-leader-dashboard-metrics";
 import LeadAssignmentWorkbench from "@/components/team-leader/lead-assignment-workbench";
 import ActionCard from "@/components/ui/action-card";
-import StatCard from "@/components/ui/stat-card";
 import { getAuthSession } from "@/lib/auth-session";
 
 const recruiterPerformance = [
@@ -32,14 +31,7 @@ export default async function TeamLeaderDashboardPage() {
 
   return (
     <section className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Total Calls" value="223" iconName="phone" trend="+12% vs last week" />
-        <StatCard label="Interviews" value="76" iconName="users" />
-        <StatCard label="Selections" value="30" iconName="userCheck" />
-        <StatCard label="Joinings" value="18" iconName="userPlus" trend="60% conversion" />
-      </div>
-
-      <TodaySummary />
+      <TeamLeaderDashboardMetrics />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <ActionCard href="/dashboard/team-leader/candidates" title="Candidates" description="Review team candidates, change stages, add comment logs." icon={Users} />
