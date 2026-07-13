@@ -15,17 +15,11 @@ export type NavGroup = {
 
 const recruiterNav: NavGroup[] = [
   {
-    id: "main",
-    label: "Main",
+    id: "nav",
+    label: "",
     items: [
       { href: "/dashboard/recruiter", label: "Dashboard", icon: "layoutGrid" },
       { href: "/dashboard/recruiter/candidates", label: "Candidates", icon: "users" },
-    ],
-  },
-  {
-    id: "pipeline",
-    label: "Pipeline",
-    items: [
       { href: "/dashboard/recruiter/candidates/new", label: "Add Candidate", icon: "userPlus" },
       { href: "/dashboard/recruiter/invitations", label: "Invitations", icon: "send" },
       { href: "/dashboard/recruiter/transfers", label: "Transfer Requests", icon: "userCheck" },

@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import DashboardAccountActions from "@/components/dashboard/dashboard-account-actions";
 import type { UserRole } from "@/lib/auth";
 import { displayNameForEmail } from "@/lib/demo-accounts";
-import { flattenNavItems, navGroupsForRole, type NavGroup, type NavItem } from "@/lib/dashboard-nav-config";
+import { flattenNavItems, navGroupsForRole, type NavItem } from "@/lib/dashboard-nav-config";
 import { getDashboardIcon } from "@/lib/dashboard-icons";
 
 type DashboardSidebarProps = {
@@ -62,55 +62,6 @@ function NavLink({
   );
 }
 
-function NavGroupSection({
-  group,
-  pathname,
-  allHrefs,
-  onNavigate,
-  defaultOpen = true,
-}: {
-  group: NavGroup;
-  pathname: string;
-  allHrefs: string[];
-  onNavigate?: () => void;
-  defaultOpen?: boolean;
-}) {
-  const [expanded, setExpanded] = useState(defaultOpen);
-  const hasActiveChild = group.items.some((item) => isActive(pathname, item.href, allHrefs));
-  const isCollapsible = group.id !== "main";
-
-  if (!isCollapsible) {
-    return (
-      <div className="space-y-1">
-        {group.items.map((item) => (
-          <NavLink key={item.href} item={item} pathname={pathname} allHrefs={allHrefs} onNavigate={onNavigate} />
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-xl border border-transparent">
-      <button
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        aria-expanded={expanded}
-        className="ui-nav-group-label flex w-full min-h-[2.25rem] items-center justify-between rounded-lg px-3 py-2 text-left hover:bg-credicus-surface"
-      >
-        <span>{group.label}</span>
-        <ChevronDown className={`h-4 w-4 transition-transform ${expanded || hasActiveChild ? "rotate-180" : ""}`} />
-      </button>
-      {expanded || hasActiveChild ? (
-        <div className="mt-1 space-y-1 border-l-2 border-credicus-primary/20 pl-2">
-          {group.items.map((item) => (
-            <NavLink key={item.href} item={item} pathname={pathname} allHrefs={allHrefs} onNavigate={onNavigate} />
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
 export default function DashboardSidebar({
   role,
   email,
@@ -131,16 +82,11 @@ export default function DashboardSidebar({
     .toUpperCase();
   const [navQuery, setNavQuery] = useState("");
 
-  const filteredGroups = useMemo(() => {
+  const filteredItems = useMemo(() => {
     const q = navQuery.trim().toLowerCase();
-    if (!q) return groups;
-    return groups
-      .map((group) => ({
-        ...group,
-        items: group.items.filter((item) => item.label.toLowerCase().includes(q)),
-      }))
-      .filter((group) => group.items.length > 0);
-  }, [groups, navQuery]);
+    if (!q) return allItems;
+    return allItems.filter((item) => item.label.toLowerCase().includes(q));
+  }, [allItems, navQuery]);
 
   return (
     <>
@@ -194,20 +140,21 @@ export default function DashboardSidebar({
           </div>
         </div>
 
-        <nav className="dashboard-nav-scroll min-h-0 flex-1 space-y-4 px-3 py-4">
-          {filteredGroups.length === 0 ? (
+        <nav className="dashboard-nav-scroll min-h-0 flex-1 px-3 py-4">
+          {filteredItems.length === 0 ? (
             <p className="px-3 text-sm text-credicus-ink-muted">No menu items match your search.</p>
           ) : (
-            filteredGroups.map((group) => (
-              <NavGroupSection
-                key={group.id}
-                group={group}
-                pathname={pathname}
-                allHrefs={allHrefs}
-                onNavigate={onClose}
-                defaultOpen={group.id === "main" || navQuery.trim().length > 0}
-              />
-            ))
+            <div className="space-y-1">
+              {filteredItems.map((item) => (
+                <NavLink
+                  key={item.href}
+                  item={item}
+                  pathname={pathname}
+                  allHrefs={allHrefs}
+                  onNavigate={onClose}
+                />
+              ))}
+            </div>
           )}
         </nav>
 
