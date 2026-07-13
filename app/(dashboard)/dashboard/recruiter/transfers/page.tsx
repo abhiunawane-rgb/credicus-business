@@ -7,5 +7,5 @@ export default async function RecruiterTransfersPage() {
   if (!session) redirect("/sign-in");
   if (session.role !== "recruiter") redirect("/dashboard");
 
-  return <TransferRequestsPanel />;
+  return <TransferRequestsPanel currentUserEmail={session.email} />;
 }
