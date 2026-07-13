@@ -114,6 +114,8 @@ model Candidate {
   notice_period       String?
   call_status         CallStatus?
   interview_date      DateTime?
+  join_date           DateTime?
+  exit_date           DateTime?
   rejection_reason    String?
   resume_url          String?
   status              CandidateStatus @default(new)

@@ -7,5 +7,12 @@ export default async function RecruiterCandidatesPage() {
   if (!session) redirect("/sign-in");
   if (session.role !== "recruiter") redirect("/dashboard");
 
-  return <CandidateStatusTable detailBasePath="/dashboard/recruiter/candidates" scope="mine" showDateFilters />;
+  return (
+    <CandidateStatusTable
+      detailBasePath="/dashboard/recruiter/candidates"
+      scope="mine"
+      showDateFilters
+      showJoinExitDates
+    />
+  );
 }

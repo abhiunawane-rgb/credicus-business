@@ -31,7 +31,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     status: body.status as CandidateStage | undefined,
     rejection_reason: body.rejection_reason as string | undefined,
     call_status: body.call_status as string | undefined,
-    interview_date: body.interview_date as string | undefined,
+    interview_date: body.interview_date as string | null | undefined,
+    join_date: body.join_date as string | null | undefined,
+    exit_date: body.exit_date as string | null | undefined,
     name: body.name as string | undefined,
     mobile: body.mobile as string | undefined,
   });

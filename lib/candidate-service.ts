@@ -62,6 +62,8 @@ function mapDbCandidate(row: Record<string, unknown>): CandidateRecord {
     notice_period: row.notice_period as string | null,
     call_status: row.call_status as string | null,
     interview_date: row.interview_date ? new Date(row.interview_date as string).toISOString() : null,
+    join_date: row.join_date ? new Date(row.join_date as string).toISOString() : null,
+    exit_date: row.exit_date ? new Date(row.exit_date as string).toISOString() : null,
     rejection_reason: row.rejection_reason as string | null,
     resume_url: row.resume_url as string | null,
     status: row.status as CandidateRecord["status"],
@@ -206,11 +208,31 @@ function definedFields<T extends Record<string, unknown>>(data: T): Partial<T> {
   return Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined)) as Partial<T>;
 }
 
+function normalizeDateField(value: string | null | undefined): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (!value) return null;
+  return new Date(`${value.slice(0, 10)}T00:00:00`).toISOString();
+}
+
+function normalizeCandidatePatch(patch: Partial<CandidateRecord>): Partial<CandidateRecord> {
+  const next = { ...patch };
+  if ("interview_date" in next) {
+    next.interview_date = normalizeDateField(next.interview_date) ?? null;
+  }
+  if ("join_date" in next) {
+    next.join_date = normalizeDateField(next.join_date) ?? null;
+  }
+  if ("exit_date" in next) {
+    next.exit_date = normalizeDateField(next.exit_date) ?? null;
+  }
+  return next;
+}
+
 export async function updateCandidate(
   id: string,
   data: Partial<CandidateRecord>,
 ): Promise<CandidateRecord | null> {
-  const patch = definedFields(data as Record<string, unknown>) as Partial<CandidateRecord>;
+  const patch = normalizeCandidatePatch(definedFields(data as Record<string, unknown>) as Partial<CandidateRecord>);
   if (useDatabase()) {
     try {
       const row = await prisma.candidate.update({
@@ -227,14 +249,33 @@ export async function updateCandidate(
           resume_url: patch.resume_url,
           status: patch.status as never,
           created_by: patch.created_by,
+          interview_date:
+            patch.interview_date !== undefined
+              ? patch.interview_date
+                ? new Date(patch.interview_date)
+                : null
+              : undefined,
+          join_date:
+            patch.join_date !== undefined
+              ? patch.join_date
+                ? new Date(patch.join_date)
+                : null
+              : undefined,
+          exit_date:
+            patch.exit_date !== undefined
+              ? patch.exit_date
+                ? new Date(patch.exit_date)
+                : null
+              : undefined,
         },
       });
-      return mapDbCandidate(row as unknown as Record<string, unknown>);
+      return normalizeCandidateRecord(mapDbCandidate(row as unknown as Record<string, unknown>));
     } catch (error) {
       handleDbError(error);
     }
   }
-  return memoryUpdateCandidate(id, patch);
+  const updated = memoryUpdateCandidate(id, patch);
+  return updated ? normalizeCandidateRecord(updated) : null;
 }
 
 export async function deleteCandidate(id: string): Promise<boolean> {

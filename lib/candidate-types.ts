@@ -31,6 +31,8 @@ export type CandidateRecord = {
   notice_period?: string | null;
   call_status?: string | null;
   interview_date?: string | null;
+  join_date?: string | null;
+  exit_date?: string | null;
   rejection_reason?: string | null;
   resume_url?: string | null;
   status: CandidateStage;

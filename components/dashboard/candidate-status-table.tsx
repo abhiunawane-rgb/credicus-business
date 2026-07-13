@@ -4,6 +4,7 @@ import { Edit } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ListFilterBar from "@/components/dashboard/list-filter-bar";
+import { useActionFeedback } from "@/components/providers/action-feedback-provider";
 import type { CandidateRecord } from "@/lib/candidate-types";
 import {
   APPLICATION_STATUS_LABELS,
@@ -21,6 +22,7 @@ type CandidateStatusTableProps = {
   scope?: "mine" | "all";
   showAddedBy?: boolean;
   showDateFilters?: boolean;
+  showJoinExitDates?: boolean;
 };
 
 const STAGE_FILTER_OPTIONS: Array<{ value: string; label: string }> = [
@@ -35,13 +37,48 @@ function statusBadgeClass(status: CandidateRecord["status"]): string {
   return "border-credicus-line-subtle bg-credicus-surface text-credicus-ink-secondary";
 }
 
+function dateInputValue(iso?: string | null) {
+  return iso ? toLocalDateKey(iso) : "";
+}
+
+function EditableDateCell({
+  value,
+  editable,
+  saving,
+  onChange,
+  label,
+}: {
+  value?: string | null;
+  editable: boolean;
+  saving: boolean;
+  onChange: (value: string) => void;
+  label: string;
+}) {
+  if (!editable) {
+    return <span>{value ? toLocalDateKey(value) : "—"}</span>;
+  }
+
+  return (
+    <input
+      type="date"
+      value={dateInputValue(value)}
+      disabled={saving}
+      onChange={(event) => onChange(event.target.value)}
+      className="w-full min-w-[9.5rem] rounded-md border border-credicus-line-subtle bg-white px-2 py-1.5 text-sm outline-none focus:border-credicus-primary disabled:opacity-60"
+      aria-label={label}
+    />
+  );
+}
+
 export default function CandidateStatusTable({
   detailBasePath,
   readOnly = false,
   scope = "all",
   showAddedBy = false,
   showDateFilters = false,
+  showJoinExitDates = false,
 }: CandidateStatusTableProps) {
+  const { notify } = useActionFeedback();
   const [rows, setRows] = useState<CandidateRecord[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -50,6 +87,7 @@ export default function CandidateStatusTable({
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [savingDateKey, setSavingDateKey] = useState<string | null>(null);
 
   const loadRows = useCallback(async () => {
     setLoading(true);
@@ -96,7 +134,35 @@ export default function CandidateStatusTable({
     setPage(1);
   }
 
-  const columnCount = showAddedBy ? 9 : 8;
+  async function updateCandidateDate(
+    candidateId: string,
+    field: "join_date" | "exit_date",
+    value: string,
+  ) {
+    const savingKey = `${candidateId}:${field}`;
+    setSavingDateKey(savingKey);
+    try {
+      const response = await fetch(`/api/candidates/${candidateId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ [field]: value || null }),
+      });
+      const payload = (await response.json()) as { data?: CandidateRecord; error?: string };
+      if (!response.ok || !payload.data) {
+        notify.error(payload.error ?? "Could not update date.");
+        return;
+      }
+      setRows((current) => current.map((row) => (row.id === candidateId ? payload.data! : row)));
+    } catch {
+      notify.error("Could not update date.");
+    } finally {
+      setSavingDateKey(null);
+    }
+  }
+
+  const columnCount = 8 + (showJoinExitDates ? 2 : 0) + (showAddedBy ? 1 : 0);
+  const editableDates = showJoinExitDates && !readOnly;
 
   return (
     <div className="space-y-4">
@@ -169,6 +235,8 @@ export default function CandidateStatusTable({
                 <th className="px-4 py-3">Applied For</th>
                 <th className="px-4 py-3">Preferred Date</th>
                 <th className="px-4 py-3">Location</th>
+                {showJoinExitDates ? <th className="px-4 py-3">Join Date</th> : null}
+                {showJoinExitDates ? <th className="px-4 py-3">Exit Date</th> : null}
                 {showAddedBy ? <th className="px-4 py-3">Added By</th> : null}
                 <th className="px-4 py-3">Action</th>
               </tr>
@@ -211,6 +279,28 @@ export default function CandidateStatusTable({
                       <td className="px-4 py-3 text-credicus-ink-secondary">
                         {row.location ?? row.preferred_locations[0] ?? "—"}
                       </td>
+                      {showJoinExitDates ? (
+                        <td className="px-4 py-3 text-credicus-ink-secondary">
+                          <EditableDateCell
+                            value={row.join_date}
+                            editable={editableDates}
+                            saving={savingDateKey === `${row.id}:join_date`}
+                            onChange={(value) => void updateCandidateDate(row.id, "join_date", value)}
+                            label={`Join date for ${displayName}`}
+                          />
+                        </td>
+                      ) : null}
+                      {showJoinExitDates ? (
+                        <td className="px-4 py-3 text-credicus-ink-secondary">
+                          <EditableDateCell
+                            value={row.exit_date}
+                            editable={editableDates}
+                            saving={savingDateKey === `${row.id}:exit_date`}
+                            onChange={(value) => void updateCandidateDate(row.id, "exit_date", value)}
+                            label={`Exit date for ${displayName}`}
+                          />
+                        </td>
+                      ) : null}
                       {showAddedBy ? (
                         <td className="px-4 py-3 text-credicus-ink-secondary">
                           {row.created_by ? displayNameForEmail(row.created_by) : "—"}
