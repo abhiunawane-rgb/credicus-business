@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
+import { hashPassword } from "@/lib/auth";
 import { isAdminRequest } from "@/lib/admin-guard";
 import { disableDatabase, useDatabase } from "@/lib/db-mode";
+import { isUniqueEmailError } from "@/lib/db-unavailable";
 import {
   memoryCreateUser,
   memoryListUsers,
+  memoryMirrorUser,
   type MemoryUserRole,
   type MemoryUserStatus,
 } from "@/lib/memory-users";
@@ -68,8 +71,9 @@ export async function GET() {
 }
 
 /**
- * Create login accounts without requiring DATABASE_URL / Prisma.
- * Persistence is in-memory (demo) so admin create always works.
+ * Create login accounts.
+ * Always succeeds without DATABASE_URL (memory/demo).
+ * When Postgres is configured on Vercel, also persists durably.
  */
 export async function POST(request: Request) {
   if (!(await isAdminRequest())) {
@@ -108,13 +112,53 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid status. Choose Active or Inactive." }, { status: 400 });
   }
 
+  // Path A — Postgres (Vercel + Neon/Supabase). Never return DATABASE_URL setup errors.
+  if (useDatabase()) {
+    try {
+      const { prisma } = await import("@/lib/prisma");
+      const user = await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: hashPassword(password),
+          role,
+          status,
+        },
+        select: { id: true, name: true, email: true, role: true, status: true },
+      });
+      try {
+        memoryMirrorUser({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          password,
+          role: user.role as MemoryUserRole,
+          status: user.status as MemoryUserStatus,
+        });
+      } catch {
+        // ignore
+      }
+      return NextResponse.json({ data: user, mode: "database" }, { status: 201 });
+    } catch (error) {
+      if (isUniqueEmailError(error)) {
+        return NextResponse.json(
+          { error: "A user with this email address already exists." },
+          { status: 409 },
+        );
+      }
+      disableDatabase();
+      // Fall through to memory — do not surface prisma:setup / DATABASE_URL messages.
+    }
+  }
+
+  // Path B — demo / no database (works on Vercel immediately after redeploy)
   try {
     const user = memoryCreateUser({ name, email, password, role, status });
     return NextResponse.json(
       {
         data: user,
         mode: "memory",
-        warning: "User created. (Demo save — may reset if the server restarts.)",
+        warning: "User created in demo mode. Add DATABASE_URL on Vercel for permanent users.",
       },
       { status: 201 },
     );

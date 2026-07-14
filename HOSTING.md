@@ -69,19 +69,24 @@ MUST include:
 ## Option A — Deploy on Vercel (recommended)
 
 1. Push project to GitHub
-2. Go to [vercel.com](https://vercel.com) → New Project → Import repo
-3. Add environment variables:
-   - `JWT_SECRET` = long random string
-   - `DATABASE_URL` = PostgreSQL URL (optional for UI-only demo)
-4. Deploy — Vercel runs `npm run build` automatically
-5. Your site will be live at `https://your-project.vercel.app`
+2. Go to [vercel.com](https://vercel.com) → New Project → Import repo **or** open the existing project linked to `credicus-business`
+3. Add environment variables (Project → Settings → Environment Variables):
+   - `JWT_SECRET` = long random string (required)
+   - `CREDICUS_DEMO_MODE` = `true` (required if you have no Postgres yet — stops create-user DB errors)
+   - `DATABASE_URL` = `postgresql://...` from Neon/Supabase (optional, for permanent users)
+4. Deploy / Redeploy — Vercel runs `npm run build` automatically
+5. Live URL example: `https://credicus-business.vercel.app`
 
-**Database (optional for full demo):** Use [Neon](https://neon.tech) or [Supabase](https://supabase.com) free PostgreSQL, then run:
+**If Create user still shows the old DATABASE_URL error:** the live site is on an old build. In Vercel → Deployments → open the latest → **Redeploy** (or push a new commit to `main`).
+
+**Database (for permanent users):** Use [Neon](https://neon.tech) or [Supabase](https://supabase.com) free PostgreSQL, set `DATABASE_URL`, set `CREDICUS_DEMO_MODE=false`, then run locally against that URL:
 
 ```bash
 npx prisma db push
 npm run prisma:seed
 ```
+
+Then Redeploy on Vercel.
 
 ---
 
