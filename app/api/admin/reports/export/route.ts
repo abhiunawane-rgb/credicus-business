@@ -26,8 +26,11 @@ function toCsv(rows: Array<Record<string, unknown>>): string {
 }
 
 function asDownload(body: string | Buffer, filename: string, format: "csv" | "xlsx") {
+  // NextResponse expects web BodyInit; Node Buffer is not assignable in Next 16 types.
+  const payload: BodyInit = typeof body === "string" ? body : new Uint8Array(body);
+
   if (format === "csv") {
-    return new NextResponse(body, {
+    return new NextResponse(payload, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="${filename}"`,
@@ -35,7 +38,7 @@ function asDownload(body: string | Buffer, filename: string, format: "csv" | "xl
     });
   }
 
-  return new NextResponse(body, {
+  return new NextResponse(payload, {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": `attachment; filename="${filename}"`,
