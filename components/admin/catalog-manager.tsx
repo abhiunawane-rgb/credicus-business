@@ -83,12 +83,15 @@ export default function CatalogManager() {
 
   return (
     <section className="ui-card p-4">
-      <h4 className="mb-4 text-lg font-semibold text-credicus-ink">Cities & Companies</h4>
+      <h4 className="mb-4 text-lg font-semibold text-credicus-ink">Locations & Companies</h4>
+      <p className="mb-4 text-sm text-credicus-gray">
+        Only admins can add these. Recruiters and team leaders see them in invite and candidate forms.
+      </p>
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-3">
           <h5 className="flex items-center gap-2 text-sm font-semibold text-credicus-ink">
             <MapPin className="h-4 w-4 text-credicus-primary" />
-            Add City
+            Locations
           </h5>
           <form onSubmit={addCity} className="flex gap-2">
             <input
@@ -104,7 +107,7 @@ export default function CatalogManager() {
           </form>
           <div className="flex flex-wrap gap-2">
             {loading ? (
-              <p className="text-sm text-credicus-gray">Loading cities...</p>
+              <p className="text-sm text-credicus-gray">Loading locations...</p>
             ) : (
               cities.map((city) => (
                 <span key={city} className="rounded-full border border-credicus-line-subtle bg-credicus-surface px-3 py-1 text-xs text-credicus-ink">
@@ -118,7 +121,7 @@ export default function CatalogManager() {
         <div className="space-y-3">
           <h5 className="flex items-center gap-2 text-sm font-semibold text-credicus-ink">
             <Building2 className="h-4 w-4 text-credicus-primary" />
-            Add Company
+            Companies
           </h5>
           <form onSubmit={addCompany} className="flex gap-2">
             <input

@@ -16,7 +16,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
-    "prisma:setup": "prisma db push && tsx prisma/seed.ts",
+    "prisma:setup": "prisma db push --accept-data-loss && tsx prisma/seed.ts",
     "cpanel:diagnose": "node scripts/cpanel-diagnose.js",
     "cpanel:setup": "node scripts/cpanel-setup.js",
     "cpanel:fix": "node scripts/cpanel-fix.js"

@@ -6,6 +6,14 @@ const path = require("path");
 const Module = require("module");
 
 const dir = __dirname;
+
+// Ensure .env is loaded when Node starts via cPanel / custom server (not only next CLI).
+try {
+  const { loadEnvConfig } = require("@next/env");
+  loadEnvConfig(dir);
+} catch {
+  // @next/env unavailable — rely on host-injected environment variables.
+}
 const home = process.env.HOME || "";
 const port = parseInt(process.env.PORT || "3000", 10);
 const host = "127.0.0.1";

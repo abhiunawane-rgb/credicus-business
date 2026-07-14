@@ -2,7 +2,11 @@ import { UserRole, UserStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth";
 import { isAdminRequest } from "@/lib/admin-guard";
-import { demoAccounts } from "@/lib/demo-accounts";
+import { disableDatabase, useDatabase } from "@/lib/db-mode";
+import {
+  memoryCreateUser,
+  memoryListUsers,
+} from "@/lib/memory-users";
 import { prisma } from "@/lib/prisma";
 import { friendlyUserApiError } from "@/lib/user-api-errors";
 
@@ -14,36 +18,44 @@ type CreateUserPayload = {
   status?: UserStatus;
 };
 
+function isDbUnavailable(error: unknown): boolean {
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  return (
+    message.includes("database_url") ||
+    message.includes("environment variable not found") ||
+    message.includes("can't reach database") ||
+    message.includes("connection refused") ||
+    message.includes("connect econnrefused") ||
+    message.includes("p1001") ||
+    message.includes("timed out fetching")
+  );
+}
+
 export async function GET() {
   if (!(await isAdminRequest())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const demoUsers = demoAccounts.map((account) => ({
-    id: account.id,
-    name: account.name,
-    email: account.email,
-    role: account.role,
-    status: UserStatus.active,
-  }));
-
-  try {
-    const users = await prisma.user.findMany({
-      orderBy: { name: "asc" },
-      select: { id: true, name: true, email: true, role: true, status: true },
-    });
-
-    const merged = [...users];
-    for (const demoUser of demoUsers) {
-      if (!merged.some((user) => user.email === demoUser.email)) {
-        merged.push(demoUser);
+  if (useDatabase()) {
+    try {
+      const users = await prisma.user.findMany({
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, email: true, role: true, status: true },
+      });
+      return NextResponse.json({ data: users });
+    } catch (error) {
+      if (isDbUnavailable(error)) {
+        disableDatabase();
+      } else {
+        return NextResponse.json(
+          { error: friendlyUserApiError(error, "Failed to load users.") },
+          { status: 500 },
+        );
       }
     }
-
-    return NextResponse.json({ data: merged });
-  } catch {
-    return NextResponse.json({ data: demoUsers });
   }
+
+  return NextResponse.json({ data: memoryListUsers() });
 }
 
 export async function POST(request: Request) {
@@ -80,29 +92,38 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid status. Choose Active or Inactive." }, { status: 400 });
   }
 
-  if (!process.env.DATABASE_URL) {
-    return NextResponse.json(
-      { error: "Database is not configured. Add DATABASE_URL to your .env file, then run: npm run prisma:setup" },
-      { status: 503 },
-    );
+  if (useDatabase() && process.env.DATABASE_URL) {
+    try {
+      const user = await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: hashPassword(password),
+          role,
+          status,
+        },
+        select: { id: true, name: true, email: true, role: true, status: true },
+      });
+      return NextResponse.json({ data: user }, { status: 201 });
+    } catch (error) {
+      if (isDbUnavailable(error)) {
+        disableDatabase();
+      } else {
+        const message = friendlyUserApiError(error, "Failed to create user.");
+        return NextResponse.json(
+          { error: message, details: error instanceof Error ? error.message : String(error) },
+          { status: 500 },
+        );
+      }
+    }
   }
 
   try {
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashPassword(password),
-        role,
-        status,
-      },
-      select: { id: true, name: true, email: true, role: true, status: true },
-    });
+    const user = memoryCreateUser({ name, email, password, role, status });
     return NextResponse.json({ data: user }, { status: 201 });
   } catch (error) {
-    const message = friendlyUserApiError(error, "Failed to create user.");
     return NextResponse.json(
-      { error: message, details: error instanceof Error ? error.message : String(error) },
+      { error: error instanceof Error ? error.message : "Failed to create user." },
       { status: 500 },
     );
   }

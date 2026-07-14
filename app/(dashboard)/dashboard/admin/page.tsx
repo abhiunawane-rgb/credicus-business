@@ -2,12 +2,11 @@ import { redirect } from "next/navigation";
 import { BarChart3, Database, UserCog, UserPlus } from "lucide-react";
 import AdminPanel from "@/components/admin/admin-panel";
 import CatalogManager from "@/components/admin/catalog-manager";
+import AdminDashboardMetrics from "@/components/dashboard/admin-dashboard-metrics";
 import ClientSummaryTable from "@/components/dashboard/client-summary-table";
 import RecruiterSummaryTable from "@/components/dashboard/recruiter-summary-table";
-import TodaySummary from "@/components/dashboard/today-summary";
 import ActionCard from "@/components/ui/action-card";
 import DashboardHeader from "@/components/ui/dashboard-header";
-import StatCard from "@/components/ui/stat-card";
 import { getAuthSession } from "@/lib/auth-session";
 
 export default async function AdminDashboardPage() {
@@ -28,13 +27,7 @@ export default async function AdminDashboardPage() {
         tip="User management: go to Users in the sidebar to add accounts, set roles, activate/deactivate, reset passwords, or delete users."
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Total Users" value="12" iconName="users" />
-        <StatCard label="Active Recruiters" value="8" iconName="userCog" trend="4 online now" />
-        <StatCard label="Pending Support" value="4" iconName="headphones" />
-      </div>
-
-      <TodaySummary />
+      <AdminDashboardMetrics />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <ActionCard href="/dashboard/admin/users" title="User Management" description="Create users, set user type, edit, change roles, and remove accounts." icon={UserCog} />
@@ -43,8 +36,8 @@ export default async function AdminDashboardPage() {
         <ActionCard href="/dashboard/admin/reports" title="Reports" description="Month-wise hiring data and performance tables." icon={BarChart3} />
       </div>
 
-      <RecruiterSummaryTable />
-      <ClientSummaryTable title="All Client-wise Summary" />
+      <RecruiterSummaryTable showDownload />
+      <ClientSummaryTable title="All Client-wise Summary" showDownload />
 
       <CatalogManager />
       <AdminPanel />

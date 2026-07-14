@@ -14,9 +14,9 @@ export default async function AdminTalentPoolPage() {
       <DashboardHeader
         iconName="database"
         title="Talent Pool"
-        description="Admin view of all candidates across recruiters and clients."
+        description="Admin view of all candidates across recruiters. Each card shows which recruiter added the candidate."
       />
-      <CandidateWorkbench currentUserEmail={session.email} />
+      <CandidateWorkbench currentUserEmail={session.email} showAddedBy scope="all" />
     </section>
   );
 }

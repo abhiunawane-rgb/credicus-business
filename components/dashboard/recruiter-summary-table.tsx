@@ -1,19 +1,14 @@
 "use client";
 
 import { Users } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ClickableMetricCell from "@/components/dashboard/clickable-metric-cell";
 import ListFilterBar from "@/components/dashboard/list-filter-bar";
+import ReportDownloadButtons from "@/components/dashboard/report-download-buttons";
 import SummaryMetricDetailDialog from "@/components/dashboard/summary-metric-detail-dialog";
 import { matchesSearch } from "@/lib/list-filters";
+import type { RecruiterSummaryRow } from "@/lib/report-summaries";
 import { buildSummaryMetricDetailRows } from "@/lib/summary-metric-details";
-
-const recruiterRows = [
-  { name: "Rahul", created: 10, interviews: 10, confirmed: 10, selections: 10, joinings: 10 },
-  { name: "Mahesh", created: 15, interviews: 15, confirmed: 14, selections: 15, joinings: 15 },
-  { name: "Rajesh", created: 20, interviews: 20, confirmed: 18, selections: 20, joinings: 20 },
-  { name: "Aisha Khan", created: 12, interviews: 11, confirmed: 9, selections: 8, joinings: 5 },
-];
 
 type MetricKey = "created" | "interviews" | "confirmed" | "selections" | "joinings";
 
@@ -33,13 +28,36 @@ type DetailState = {
   rowLabel: string;
 };
 
-export default function RecruiterSummaryTable() {
+type Props = {
+  showDownload?: boolean;
+};
+
+export default function RecruiterSummaryTable({ showDownload = false }: Props) {
   const [search, setSearch] = useState("");
   const [detail, setDetail] = useState<DetailState | null>(null);
+  const [rows, setRows] = useState<RecruiterSummaryRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("/api/admin/reports?type=recruiter", { credentials: "same-origin" });
+        const body = (await response.json()) as { data?: RecruiterSummaryRow[] };
+        if (!cancelled) setRows(body.data ?? []);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filtered = useMemo(
-    () => recruiterRows.filter((row) => matchesSearch(search, [row.name])),
-    [search],
+    () => rows.filter((row) => matchesSearch(search, [row.name, row.email])),
+    [search, rows],
   );
 
   const detailRows = detail
@@ -73,10 +91,13 @@ export default function RecruiterSummaryTable() {
         />
 
         <div className="ui-card overflow-x-auto p-4">
-          <h4 className="mb-4 flex items-center gap-2 text-lg font-semibold text-credicus-ink">
-            <Users className="h-5 w-5 text-credicus-primary" />
-            Today Summary — Recruiter-wise
-          </h4>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h4 className="flex items-center gap-2 text-lg font-semibold text-credicus-ink">
+              <Users className="h-5 w-5 text-credicus-primary" />
+              Today Summary — Recruiter-wise
+            </h4>
+            {showDownload ? <ReportDownloadButtons report="recruiter" /> : null}
+          </div>
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-credicus-line-default bg-credicus-surface text-credicus-gray">
@@ -89,7 +110,13 @@ export default function RecruiterSummaryTable() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-3 py-6 text-center text-credicus-ink-muted">
+                    Loading recruiter summary...
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-3 py-6 text-center text-credicus-ink-muted">
                     No recruiters match your search.
@@ -97,7 +124,7 @@ export default function RecruiterSummaryTable() {
                 </tr>
               ) : (
                 filtered.map((row) => (
-                  <tr key={row.name} className="border-b border-credicus-line-default transition-colors duration-200 hover:bg-credicus-primary-light/50">
+                  <tr key={row.email} className="border-b border-credicus-line-default transition-colors duration-200 hover:bg-credicus-primary-light/50">
                     <td className="px-3 py-3 font-medium text-credicus-ink">{row.name}</td>
                     <td className="px-3 py-3">
                       <ClickableMetricCell value={row.created} label={`${row.name} — Candidates Created`} onClick={() => openDetail(row.name, "created", row.created)} />

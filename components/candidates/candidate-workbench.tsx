@@ -32,6 +32,7 @@ export default function CandidateWorkbench({
   const { confirm, notify } = useActionFeedback();
   const [candidates, setCandidates] = useState<CandidateRecord[]>([]);
   const [commentsMap, setCommentsMap] = useState<Record<string, CommentRecord[]>>({});
+  const [nameByEmail, setNameByEmail] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
@@ -73,6 +74,20 @@ export default function CandidateWorkbench({
   useEffect(() => {
     void loadCandidates();
   }, [loadCandidates]);
+
+  useEffect(() => {
+    if (!showAddedBy) return;
+    void fetch("/api/users/directory", { credentials: "same-origin" })
+      .then((r) => r.json())
+      .then((body: { data?: Array<{ email: string; name: string }> }) => {
+        const map: Record<string, string> = {};
+        for (const user of body.data ?? []) {
+          map[user.email.toLowerCase()] = user.name;
+        }
+        setNameByEmail(map);
+      })
+      .catch(() => setNameByEmail({}));
+  }, [showAddedBy]);
 
   useEffect(() => {
     function handleTransferResolved() {
@@ -257,6 +272,11 @@ export default function CandidateWorkbench({
               currentUserEmail={currentUserEmail}
               readOnly={readOnly}
               showAddedBy={showAddedBy}
+              addedByName={
+                candidate.created_by
+                  ? nameByEmail[candidate.created_by.toLowerCase()]
+                  : undefined
+              }
               enableTransferRequest={enableTransferRequests}
               variant="light"
               onStageChange={(stage, reason) => handleStageChange(candidate.id, stage, reason)}

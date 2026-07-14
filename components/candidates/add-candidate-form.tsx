@@ -1,13 +1,13 @@
 "use client";
 
 import { Save, UserPlus } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 import BackLink from "@/components/ui/back-link";
 import { useActionFeedback } from "@/components/providers/action-feedback-provider";
 import { SOURCE_OPTIONS } from "@/lib/candidate-types";
 import { actionMessages } from "@/lib/action-messages";
+import { useAdminCatalog } from "@/lib/use-admin-catalog";
 
 type Props = {
   onSuccess?: (id: string) => void;
@@ -29,7 +29,6 @@ const initialForm = {
   experience: "",
   current_company: "",
   education: "",
-  preferred_locations: "",
   salary: "",
   location: "",
   notice_period: "",
@@ -43,23 +42,22 @@ const optionalFields: [keyof typeof initialForm, string, string][] = [
   ["process", "Process", "text"],
   ["interview_date", "Interview date", "date"],
   ["experience", "Experience (years)", "number"],
-  ["current_company", "Current company", "text"],
   ["education", "Education", "text"],
   ["salary", "Expected salary", "text"],
-  ["location", "Location", "text"],
   ["notice_period", "Notice period", "text"],
-  ["preferred_locations", "Preferred locations (comma separated)", "text"],
   ["skills", "Skills (comma separated)", "text"],
 ];
 
 export default function AddCandidateForm({ onSuccess }: Props) {
   const router = useRouter();
   const { notify } = useActionFeedback();
+  const { cities, companies } = useAdminCatalog();
   const firstFieldRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<string, string>>>({});
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(initialForm);
+  const [preferredSelected, setPreferredSelected] = useState<string[]>([]);
 
   function update(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -70,6 +68,12 @@ export default function AddCandidateForm({ onSuccess }: Props) {
         return next;
       });
     }
+  }
+
+  function togglePreferred(city: string) {
+    setPreferredSelected((prev) =>
+      prev.includes(city) ? prev.filter((item) => item !== city) : [...prev, city],
+    );
   }
 
   function validate(): boolean {
@@ -116,7 +120,7 @@ export default function AddCandidateForm({ onSuccess }: Props) {
           experience: form.experience ? Number(form.experience) : 0,
           current_company: form.current_company || null,
           education: form.education || null,
-          preferred_locations: form.preferred_locations.split(/[,|]/).map((s) => s.trim()).filter(Boolean),
+          preferred_locations: preferredSelected,
           salary: form.salary || null,
           location: form.location || null,
           notice_period: form.notice_period || null,
@@ -134,6 +138,7 @@ export default function AddCandidateForm({ onSuccess }: Props) {
       if (onSuccess) onSuccess(payload.data.id);
       if (saveAndNew) {
         setForm({ ...initialForm });
+        setPreferredSelected([]);
         setFieldErrors({});
         firstFieldRef.current?.focus();
       } else {
@@ -156,7 +161,7 @@ export default function AddCandidateForm({ onSuccess }: Props) {
         <BackLink href="/dashboard/recruiter/candidates" label="Back to candidates" />
       </div>
 
-      <p className="ui-field-hint">Name, mobile, and source are required. Everything else is optional.</p>
+      <p className="ui-field-hint">Name, mobile, and source are required. Location options come from admin city list.</p>
 
       <section className="ui-proximity-group" aria-labelledby="required-fields-title">
         <div>
@@ -254,6 +259,71 @@ export default function AddCandidateForm({ onSuccess }: Props) {
               />
             </div>
           ))}
+
+          <div className="ui-field-group">
+            <label htmlFor="field-location" className="ui-label">
+              Location
+            </label>
+            <select
+              id="field-location"
+              value={form.location}
+              onChange={(e) => update("location", e.target.value)}
+              className="ui-input"
+            >
+              <option value="">Select location</option>
+              {cities.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="ui-field-group">
+            <label htmlFor="field-current_company" className="ui-label">
+              Current company
+            </label>
+            <input
+              id="field-current_company"
+              list="admin-companies-list"
+              value={form.current_company}
+              onChange={(e) => update("current_company", e.target.value)}
+              className="ui-input"
+              placeholder="Type or pick from list"
+            />
+            <datalist id="admin-companies-list">
+              {companies.map((company) => (
+                <option key={company} value={company} />
+              ))}
+            </datalist>
+          </div>
+
+          <div className="ui-field-group md:col-span-2">
+            <span className="ui-label">Preferred locations</span>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {cities.length === 0 ? (
+                <p className="text-xs text-credicus-gray">No cities yet — admin can add them on the admin dashboard.</p>
+              ) : (
+                cities.map((city) => {
+                  const selected = preferredSelected.includes(city);
+                  return (
+                    <button
+                      key={city}
+                      type="button"
+                      onClick={() => togglePreferred(city)}
+                      className={`rounded-full border px-3 py-1 text-xs transition ${
+                        selected
+                          ? "border-credicus-primary bg-credicus-primary/10 text-credicus-ink"
+                          : "border-credicus-line-subtle bg-credicus-surface text-credicus-ink"
+                      }`}
+                    >
+                      {city}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
 
           <div className="ui-field-group md:col-span-2">
             <label htmlFor="field-comments" className="ui-label">

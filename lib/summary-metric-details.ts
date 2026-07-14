@@ -1,4 +1,4 @@
-import { listCities, listCompanies } from "@/lib/admin-catalog";
+import { listCitiesSync, listCompaniesSync } from "@/lib/admin-catalog";
 import { APPLICATION_STATUS_LABELS, type CandidateStage } from "@/lib/candidate-types";
 
 export type SummaryMetricDetailRow = {
@@ -45,8 +45,8 @@ export function buildSummaryMetricDetailRows(input: {
   metricLabel: string;
   count: number;
 }): SummaryMetricDetailRow[] {
-  const cities = listCities();
-  const companies = listCompanies();
+  const cities = listCitiesSync();
+  const companies = listCompaniesSync();
   const total = Math.max(0, input.count);
 
   return Array.from({ length: total }, (_, index) => {

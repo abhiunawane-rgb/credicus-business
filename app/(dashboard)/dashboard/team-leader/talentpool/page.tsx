@@ -14,9 +14,9 @@ export default async function TeamLeaderTalentPoolPage() {
       <DashboardHeader
         iconName="database"
         title="Talent Pool"
-        description="Full candidate pool view. Team Leaders can update stages and add comment logs."
+        description="Full candidate pool view. Each card shows which recruiter added the candidate. Team Leaders can update stages and add comments."
       />
-      <CandidateWorkbench currentUserEmail={session.email} />
+      <CandidateWorkbench currentUserEmail={session.email} showAddedBy scope="all" />
     </section>
   );
 }

@@ -143,6 +143,11 @@ model CandidateComment {
   @@index([candidate_id])
 }
 
+model CatalogCity {
+  id   String @id @default(uuid())
+  name String @unique
+}
+
 model ClientCompany {
   id   String @id @default(uuid())
   name String @unique

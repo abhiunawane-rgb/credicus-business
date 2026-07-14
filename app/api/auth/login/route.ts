@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { findUserByEmail } from "@/lib/demo-users";
 import { getAuthCookieSetOptions } from "@/lib/auth-cookie";
 import { getAuthCookieName, getRoleDashboardPath, signAuthToken, verifyPassword } from "@/lib/auth";
+import { memoryFindUserByEmail } from "@/lib/memory-users";
 import { prisma } from "@/lib/prisma";
 
 type LoginBody = {
@@ -43,6 +44,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
   }
 
+  const memoryUser = memoryFindUserByEmail(email);
+  if (memoryUser && verifyPassword(password, memoryUser.password)) {
+    if (memoryUser.status === "inactive") {
+      return NextResponse.json({ error: "Your account is inactive. Contact an administrator." }, { status: 403 });
+    }
+    return loginSuccessResponse(request, memoryUser);
+  }
+
   const demoUser = findUserByEmail(email);
   if (demoUser && verifyPassword(password, demoUser.passwordHash)) {
     return loginSuccessResponse(request, demoUser);
@@ -61,7 +70,7 @@ export async function POST(request: Request) {
       return loginSuccessResponse(request, dbUser);
     }
   } catch {
-    // Database unavailable; demo users still work above.
+    // Database unavailable; demo and memory users still work above.
   }
 
   return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });

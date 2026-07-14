@@ -118,6 +118,15 @@ async function main() {
   for (const candidate of seedCandidates) {
     await prisma.candidate.create({ data: candidate });
   }
+
+  const seedCities = ["Mumbai", "Hyderabad", "Jaipur", "Bengaluru", "Pune", "Kochi", "Ahmedabad", "Noida"];
+  const seedCompanies = ["NovaCorp", "GreenLeaf", "Summit HR", "TechBridge", "Horizon Staffing", "BlueRidge"];
+  for (const name of seedCities) {
+    await prisma.catalogCity.upsert({ where: { name }, update: {}, create: { name } });
+  }
+  for (const name of seedCompanies) {
+    await prisma.clientCompany.upsert({ where: { name }, update: {}, create: { name } });
+  }
 }
 
 main()

@@ -1,15 +1,18 @@
 "use client";
 
 import { X } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useId, useRef } from "react";
 import type { TeamLeaderKpiDetail } from "@/lib/team-leader-kpi-details";
 
 type KpiDetailDialogProps = {
   detail: TeamLeaderKpiDetail | null;
   onClose: () => void;
+  actionHref?: string;
+  actionLabel?: string;
 };
 
-export default function KpiDetailDialog({ detail, onClose }: KpiDetailDialogProps) {
+export default function KpiDetailDialog({ detail, onClose, actionHref, actionLabel }: KpiDetailDialogProps) {
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -82,8 +85,13 @@ export default function KpiDetailDialog({ detail, onClose }: KpiDetailDialogProp
           ) : null}
         </div>
 
-        <div className="border-t border-credicus-line-subtle px-5 py-4">
-          <button type="button" onClick={onClose} className="ui-button-primary w-full sm:w-auto">
+        <div className="flex flex-wrap gap-2 border-t border-credicus-line-subtle px-5 py-4">
+          {actionHref && actionLabel ? (
+            <Link href={actionHref} onClick={onClose} className="ui-button-primary">
+              {actionLabel}
+            </Link>
+          ) : null}
+          <button type="button" onClick={onClose} className="ui-button-secondary">
             Close
           </button>
         </div>

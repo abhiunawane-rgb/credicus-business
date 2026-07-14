@@ -24,6 +24,7 @@ type CandidateCardProps = {
   readOnly?: boolean;
   commentsExpanded?: boolean;
   showAddedBy?: boolean;
+  addedByName?: string;
   enableTransferRequest?: boolean;
   variant?: "light" | "dark";
   onStageChange: (stage: CandidateStage, rejectionReason?: string) => Promise<void>;
@@ -55,6 +56,7 @@ export default function CandidateCard({
   readOnly = false,
   commentsExpanded = false,
   showAddedBy = false,
+  addedByName,
   enableTransferRequest = false,
   variant = "light",
   onStageChange,
@@ -160,8 +162,9 @@ export default function CandidateCard({
             {showAddedBy ? (
               <div className="grid grid-cols-[90px_1fr] gap-2">
                 <dt className={isDark ? "text-credicus-gray" : "text-credicus-gray"}>Added by</dt>
-                <dd className={isDark ? "text-gray-200" : "text-gray-800"}>
-                  {candidate.created_by ? displayNameForEmail(candidate.created_by) : "Unknown"}
+                <dd className={`font-medium ${isDark ? "text-gray-200" : "text-gray-800"}`}>
+                  {addedByName ||
+                    (candidate.created_by ? displayNameForEmail(candidate.created_by) : "Unknown")}
                 </dd>
               </div>
             ) : null}
