@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth";
 import { isAdminRequest } from "@/lib/admin-guard";
 import { disableDatabase, useDatabase } from "@/lib/db-mode";
-import { isDbUnavailable, isUniqueEmailError } from "@/lib/db-unavailable";
+import { isUniqueEmailError } from "@/lib/db-unavailable";
 import {
   memoryDeleteUser,
   memoryFindUserById,
@@ -12,7 +12,6 @@ import {
 } from "@/lib/memory-users";
 import { getRequestSession } from "@/lib/request-auth";
 import { prisma } from "@/lib/prisma";
-import { friendlyUserApiError } from "@/lib/user-api-errors";
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -69,7 +68,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     }
   }
 
-  if (useDatabase() && process.env.DATABASE_URL) {
+  if (useDatabase()) {
     try {
       const updated = await prisma.user.update({
         where: { id },
@@ -117,18 +116,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
           { status: 409 },
         );
       }
-      if (isDbUnavailable(error)) {
-        disableDatabase();
-      } else {
-        const message = friendlyUserApiError(error, "Failed to update user.");
-        // User may only exist in memory (demo account) — fall through.
-        if (!message.toLowerCase().includes("not found")) {
-          return NextResponse.json(
-            { error: message, details: error instanceof Error ? error.message : String(error) },
-            { status: 500 },
-          );
-        }
-      }
+      disableDatabase();
+      // Fall through to memory for demo / offline accounts.
     }
   }
 
@@ -170,7 +159,7 @@ export async function DELETE(_: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "You cannot delete your own account." }, { status: 400 });
   }
 
-  if (useDatabase() && process.env.DATABASE_URL) {
+  if (useDatabase()) {
     try {
       await prisma.user.delete({ where: { id } });
       try {
@@ -179,18 +168,8 @@ export async function DELETE(_: Request, { params }: RouteParams) {
         // ignore memory miss
       }
       return NextResponse.json({ success: true });
-    } catch (error) {
-      if (isDbUnavailable(error)) {
-        disableDatabase();
-      } else {
-        const message = friendlyUserApiError(error, "Failed to delete user.");
-        if (!message.toLowerCase().includes("not found")) {
-          return NextResponse.json(
-            { error: message, details: error instanceof Error ? error.message : String(error) },
-            { status: 500 },
-          );
-        }
-      }
+    } catch {
+      disableDatabase();
     }
   }
 

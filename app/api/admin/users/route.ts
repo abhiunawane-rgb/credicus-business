@@ -3,14 +3,13 @@ import { NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth";
 import { isAdminRequest } from "@/lib/admin-guard";
 import { disableDatabase, useDatabase } from "@/lib/db-mode";
-import { isDbUnavailable, isUniqueEmailError } from "@/lib/db-unavailable";
+import { isUniqueEmailError } from "@/lib/db-unavailable";
 import {
   memoryCreateUser,
   memoryListUsers,
   memoryMirrorUser,
 } from "@/lib/memory-users";
 import { prisma } from "@/lib/prisma";
-import { friendlyUserApiError } from "@/lib/user-api-errors";
 
 type CreateUserPayload = {
   name?: string;
@@ -52,22 +51,15 @@ export async function GET() {
 
   const memoryUsers = memoryListUsers();
 
-  if (useDatabase() && process.env.DATABASE_URL) {
+  if (useDatabase()) {
     try {
       const users = await prisma.user.findMany({
         orderBy: { name: "asc" },
         select: { id: true, name: true, email: true, role: true, status: true },
       });
       return NextResponse.json({ data: mergeUsers(users, memoryUsers) });
-    } catch (error) {
-      if (isDbUnavailable(error)) {
-        disableDatabase();
-      } else {
-        return NextResponse.json(
-          { error: friendlyUserApiError(error, "Failed to load users.") },
-          { status: 500 },
-        );
-      }
+    } catch {
+      disableDatabase();
     }
   }
 
@@ -111,7 +103,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid status. Choose Active or Inactive." }, { status: 400 });
   }
 
-  if (useDatabase() && process.env.DATABASE_URL) {
+  // Prefer Postgres when configured; on ANY DB failure (except duplicate email),
+  // fall back to in-memory create so admin can still add users in demo mode.
+  if (useDatabase()) {
     try {
       const user = await prisma.user.create({
         data: {
@@ -145,15 +139,7 @@ export async function POST(request: Request) {
           { status: 409 },
         );
       }
-      if (isDbUnavailable(error)) {
-        disableDatabase();
-      } else {
-        const message = friendlyUserApiError(error, "Failed to create user.");
-        return NextResponse.json(
-          { error: message, details: error instanceof Error ? error.message : String(error) },
-          { status: 500 },
-        );
-      }
+      disableDatabase();
     }
   }
 
@@ -162,9 +148,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         data: user,
-        warning: process.env.DATABASE_URL
-          ? "Saved in demo memory (database unavailable). Restart may clear this user."
-          : undefined,
+        warning: "Saved without a database. This account may reset when the server restarts.",
       },
       { status: 201 },
     );

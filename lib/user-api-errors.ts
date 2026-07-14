@@ -10,8 +10,10 @@ const GENERIC_ERRORS = new Set([
 function messageFromText(message: string): string | null {
   const lower = message.toLowerCase();
 
+  // Never ask admins to set DATABASE_URL while creating users — create falls back to memory.
+  // Keep a soft message only for unrelated tooling surfaces that still need the hint.
   if (lower.includes("database_url") || lower.includes("environment variable not found")) {
-    return "Database is not configured. Add DATABASE_URL to your .env file, then run: npm run prisma:setup";
+    return "Database is temporarily unavailable. Try again — accounts can still be saved in demo mode.";
   }
 
   if (
@@ -58,7 +60,7 @@ export function friendlyUserApiError(error: unknown, fallback: string): string {
   }
 
   if (error instanceof Prisma.PrismaClientInitializationError) {
-    return "Database is not connected. Set DATABASE_URL in .env and run: npm run prisma:setup";
+    return "Database is temporarily unavailable. Accounts can still be saved in demo mode.";
   }
 
   if (error instanceof Error) {

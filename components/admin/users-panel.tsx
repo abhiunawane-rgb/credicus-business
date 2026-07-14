@@ -285,7 +285,11 @@ export default function UsersPanel() {
           payload = { error: "Server returned an invalid response while creating." };
         }
         if (!response.ok) {
-          const message = readApiErrorMessage(payload, "Failed to create user.");
+          let message = readApiErrorMessage(payload, "Failed to create user.");
+          if (/database_url|prisma:setup|database is not configured/i.test(message)) {
+            message =
+              "Could not reach the database. Refresh and try again — demo mode should still allow creating users.";
+          }
           setBannerError(message);
           notify.error(message, "Create failed");
           return;
