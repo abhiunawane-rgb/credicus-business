@@ -37,7 +37,7 @@ Record-Test "Server reachable" $true
 # --- Auth ---
 $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 try {
-  $loginBody = @{ email = "recruiter@credicus.com"; password = "Recruiter@123" } | ConvertTo-Json
+  $loginBody = @{ email = "admin@credicus.com"; password = "Admin@123" } | ConvertTo-Json
   $login = Invoke-WebRequest -Uri "$base/api/auth/login" -Method POST -ContentType "application/json" -Body $loginBody -WebSession $session -UseBasicParsing -TimeoutSec $apiTimeout
   $redirect = ($login.Content | ConvertFrom-Json).redirectTo
   Record-Test "Login API" ($redirect -eq "/dashboard/recruiter") "redirect=$redirect"

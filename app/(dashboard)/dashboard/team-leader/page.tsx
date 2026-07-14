@@ -7,18 +7,15 @@ import LeadAssignmentWorkbench from "@/components/team-leader/lead-assignment-wo
 import ActionCard from "@/components/ui/action-card";
 import { getAuthSession } from "@/lib/auth-session";
 
-const recruiterPerformance = [
-  { recruiter: "Aisha Khan", calls: 62, interviews: 20, selections: 8, joinings: 5 },
-  { recruiter: "Rohit Mehta", calls: 54, interviews: 18, selections: 7, joinings: 4 },
-  { recruiter: "Neha Verma", calls: 49, interviews: 16, selections: 6, joinings: 3 },
-  { recruiter: "Arjun Reddy", calls: 58, interviews: 22, selections: 9, joinings: 6 },
-];
+const recruiterPerformance: Array<{
+  recruiter: string;
+  calls: number;
+  interviews: number;
+  selections: number;
+  joinings: number;
+}> = [];
 
-const leadBacklog = [
-  { id: "lead-101", company: "FinEdge", role: "Senior Backend Engineer" },
-  { id: "lead-102", company: "BluePeak", role: "Sales Manager" },
-  { id: "lead-103", company: "NorthBridge", role: "Product Analyst" },
-];
+const leadBacklog: Array<{ id: string; company: string; role: string }> = [];
 
 export default async function TeamLeaderDashboardPage() {
   const session = await getAuthSession();

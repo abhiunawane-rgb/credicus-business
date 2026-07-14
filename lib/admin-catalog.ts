@@ -1,4 +1,3 @@
-import { CLIENT_COMPANIES } from "@/lib/candidate-types";
 import { disableDatabase, useDatabase } from "@/lib/db-mode";
 import { isDbUnavailable } from "@/lib/db-unavailable";
 import { prisma } from "@/lib/prisma";
@@ -8,26 +7,23 @@ type AdminCatalogStore = {
   companies: string[];
 };
 
-const seedCities = [
-  "Mumbai",
-  "Hyderabad",
-  "Jaipur",
-  "Bengaluru",
-  "Pune",
-  "Kochi",
-  "Ahmedabad",
-  "Noida",
-];
-const seedCompanies = [...CLIENT_COMPANIES];
+const seedCities: string[] = [];
+const seedCompanies: string[] = [];
 
-const globalCatalog = globalThis as unknown as { __credicusCatalog?: AdminCatalogStore };
+const globalCatalog = globalThis as unknown as {
+  __credicusCatalog?: AdminCatalogStore;
+  __credicusCatalogVersion?: number;
+};
+
+const CATALOG_VERSION = 3;
 
 function getCatalogStore(): AdminCatalogStore {
-  if (!globalCatalog.__credicusCatalog) {
+  if (!globalCatalog.__credicusCatalog || globalCatalog.__credicusCatalogVersion !== CATALOG_VERSION) {
     globalCatalog.__credicusCatalog = {
       cities: [...seedCities],
       companies: [...seedCompanies],
     };
+    globalCatalog.__credicusCatalogVersion = CATALOG_VERSION;
   }
   return globalCatalog.__credicusCatalog;
 }

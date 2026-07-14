@@ -16,7 +16,12 @@ export type MemoryUser = {
 
 type MemoryUserPublic = Omit<MemoryUser, "password">;
 
-const globalUsers = globalThis as unknown as { __credicusUsers?: MemoryUser[] };
+const globalUsers = globalThis as unknown as {
+  __credicusUsers?: MemoryUser[];
+  __credicusUsersVersion?: number;
+};
+
+const USERS_STORE_VERSION = 3;
 
 function seedUsers(): MemoryUser[] {
   return demoAccounts.map((account) => ({
@@ -30,8 +35,9 @@ function seedUsers(): MemoryUser[] {
 }
 
 function getUsers(): MemoryUser[] {
-  if (!globalUsers.__credicusUsers) {
+  if (!globalUsers.__credicusUsers || globalUsers.__credicusUsersVersion !== USERS_STORE_VERSION) {
     globalUsers.__credicusUsers = seedUsers();
+    globalUsers.__credicusUsersVersion = USERS_STORE_VERSION;
   }
   return globalUsers.__credicusUsers;
 }

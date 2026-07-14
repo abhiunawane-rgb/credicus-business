@@ -73,10 +73,8 @@ In the Node.js app panel, add:
 
 See `.env.cpanel.example` for full list.
 
-**Demo mode (no database):** Leave `DATABASE_URL` empty. These logins work:
+**Clean start (no database):** Leave `DATABASE_URL` empty. Only this login works until you create more users:
 
-- `recruiter@credicus.com` / `Recruiter@123`
-- `teamleader@credicus.com` / `TeamLeader@123`
 - `admin@credicus.com` / `Admin@123`
 
 ---

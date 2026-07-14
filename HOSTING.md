@@ -7,17 +7,15 @@
 | Feature | Works without database? |
 |---------|-------------------------|
 | Marketing website (Home, About, Services, Clients, Contact) | Yes |
-| Login page + 1-click demo accounts | Yes |
-| Recruiter / Team Leader / Admin dashboards (UI) | Yes |
+| Login page + admin bootstrap | Yes |
+| Recruiter / Team Leader / Admin dashboards (UI) | Yes (create users first) |
 | Contact form submission | Needs PostgreSQL |
 | Excel candidate upload | Needs PostgreSQL |
 | Resume upload | Needs PostgreSQL |
 | Admin user management (full CRUD) | Works in demo (in-memory) and PostgreSQL |
 
-**Demo logins (always work without DB):**
+**Bootstrap login (starts from zero — no recruiters or candidates):**
 
-- `recruiter@credicus.com` / `Recruiter@123`
-- `teamleader@credicus.com` / `TeamLeader@123`
 - `admin@credicus.com` / `Admin@123`
 
 ---

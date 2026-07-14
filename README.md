@@ -23,17 +23,17 @@ npm run dev
 
 Open **http://localhost:3000** in your browser.
 
-## Demo login accounts
+## Bootstrap admin login
 
-All accounts work without PostgreSQL. Dummy candidates and data load automatically.
+The app starts with **one admin account only**. Create recruiters, team leaders, and other admins from **Users**. Candidate data starts empty.
 
 | Role | Email | Password | After login |
 |------|-------|----------|-------------|
-| **Recruiter** | `recruiter@credicus.com` | `Recruiter@123` | `/dashboard/recruiter` |
-| **Team Leader** | `teamleader@credicus.com` | `TeamLeader@123` | `/dashboard/team-leader` |
 | **Admin** | `admin@credicus.com` | `Admin@123` | `/dashboard/admin` |
 
 Sign in at: http://localhost:3000/sign-in
+
+Then: **Users → Create user** (Recruiter / Team Leader / Admin) → those users add candidates.
 
 ## Flows to test
 

@@ -57,8 +57,6 @@ if ($homeHtml -match "Breadcrumb") {
 }
 
 $accounts = @(
-  @{ Role = "recruiter"; Email = "recruiter@credicus.com"; Password = "Recruiter@123"; Dashboard = "/dashboard/recruiter"; Denied = "/dashboard/admin" },
-  @{ Role = "team_leader"; Email = "teamleader@credicus.com"; Password = "TeamLeader@123"; Dashboard = "/dashboard/team-leader"; Denied = "/dashboard/recruiter" },
   @{ Role = "admin"; Email = "admin@credicus.com"; Password = "Admin@123"; Dashboard = "/dashboard/admin"; Denied = "/dashboard/recruiter" }
 )
 

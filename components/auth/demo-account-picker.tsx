@@ -19,9 +19,9 @@ export default function DemoAccountPicker({ activeEmail, isLoading, onSelect }: 
   return (
     <div className="space-y-3 animate-fade-in">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-credicus-ink-muted">Quick demo login</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-credicus-ink-muted">Admin login</p>
         <span className="rounded-full bg-credicus-primary-light px-2 py-0.5 text-[10px] font-semibold text-credicus-ink">
-          One tap
+          Bootstrap
         </span>
       </div>
       <div className="grid gap-2" role="list">

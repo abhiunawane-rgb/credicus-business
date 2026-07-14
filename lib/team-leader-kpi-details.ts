@@ -13,12 +13,15 @@ export type TeamLeaderKpiDetail = {
   breakdown: KpiBreakdownRow[];
 };
 
-const recruiterRows = [
-  { recruiter: "Aisha Khan", calls: 62, interviews: 20, selections: 8, joinings: 5, created: 12 },
-  { recruiter: "Rohit Mehta", calls: 54, interviews: 18, selections: 7, joinings: 4, created: 10 },
-  { recruiter: "Neha Verma", calls: 49, interviews: 16, selections: 6, joinings: 3, created: 8 },
-  { recruiter: "Arjun Reddy", calls: 58, interviews: 22, selections: 9, joinings: 6, created: 11 },
-];
+/** Starts empty — fills from live recruiter data once admin creates the team. */
+const recruiterRows: Array<{
+  recruiter: string;
+  calls: number;
+  interviews: number;
+  selections: number;
+  joinings: number;
+  created: number;
+}> = [];
 
 export function getTeamLeaderKpiDetail(
   id: string,
@@ -31,38 +34,38 @@ export function getTeamLeaderKpiDetail(
     totalCandidates: number;
   },
 ): TeamLeaderKpiDetail | null {
+  const emptyNote = "No recruiter activity yet. Admin can create recruiters from Users.";
+
   const map: Record<string, TeamLeaderKpiDetail> = {
     "total-calls": {
       id: "total-calls",
       title: "Total Calls",
-      value: "223",
-      trend: "+12% vs last week",
-      description: "Total outbound and follow-up calls made by all recruiters on your team this week.",
+      value: "0",
+      description: emptyNote,
       breakdownTitle: "Calls by recruiter",
       breakdown: recruiterRows.map((row) => ({ label: row.recruiter, value: row.calls })),
     },
     interviews: {
       id: "interviews",
       title: "Interviews",
-      value: "76",
-      description: "Candidates who reached interview stage across the team pipeline.",
+      value: "0",
+      description: emptyNote,
       breakdownTitle: "Interviews by recruiter",
       breakdown: recruiterRows.map((row) => ({ label: row.recruiter, value: row.interviews })),
     },
     selections: {
       id: "selections",
       title: "Selections",
-      value: "30",
-      description: "Candidates shortlisted, offered, or marked as selected by recruiters.",
+      value: "0",
+      description: emptyNote,
       breakdownTitle: "Selections by recruiter",
       breakdown: recruiterRows.map((row) => ({ label: row.recruiter, value: row.selections })),
     },
     joinings: {
       id: "joinings",
       title: "Joinings",
-      value: "18",
-      trend: "60% conversion",
-      description: "Candidates who successfully joined client roles after selection.",
+      value: "0",
+      description: emptyNote,
       breakdownTitle: "Joinings by recruiter",
       breakdown: recruiterRows.map((row) => ({ label: row.recruiter, value: row.joinings })),
     },
@@ -75,7 +78,10 @@ export function getTeamLeaderKpiDetail(
       value: String(liveStats.createdToday),
       description: "New candidates added to the system today by your recruitment team.",
       breakdownTitle: "Created today by recruiter",
-      breakdown: recruiterRows.map((row) => ({ label: row.recruiter, value: row.created })),
+      breakdown:
+        recruiterRows.length > 0
+          ? recruiterRows.map((row) => ({ label: row.recruiter, value: row.created }))
+          : [{ label: "No recruiters yet", value: liveStats.createdToday }],
     };
     map["interviews-today"] = {
       id: "interviews-today",
@@ -105,7 +111,10 @@ export function getTeamLeaderKpiDetail(
       value: String(liveStats.selectionsMonth),
       description: "Total shortlisted and offered candidates in the current month.",
       breakdownTitle: "Selections by recruiter",
-      breakdown: recruiterRows.map((row) => ({ label: row.recruiter, value: row.selections })),
+      breakdown:
+        recruiterRows.length > 0
+          ? recruiterRows.map((row) => ({ label: row.recruiter, value: row.selections }))
+          : [{ label: "No recruiters yet", value: liveStats.selectionsMonth }],
     };
     map["joinings-month"] = {
       id: "joinings-month",
@@ -114,7 +123,10 @@ export function getTeamLeaderKpiDetail(
       trend: `${liveStats.totalCandidates} total candidates`,
       description: "Candidates marked as joined during the current month.",
       breakdownTitle: "Joinings by recruiter",
-      breakdown: recruiterRows.map((row) => ({ label: row.recruiter, value: row.joinings })),
+      breakdown:
+        recruiterRows.length > 0
+          ? recruiterRows.map((row) => ({ label: row.recruiter, value: row.joinings }))
+          : [{ label: "No recruiters yet", value: liveStats.joiningsMonth }],
     };
   }
 
