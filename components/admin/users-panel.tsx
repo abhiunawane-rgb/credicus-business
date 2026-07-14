@@ -286,16 +286,20 @@ export default function UsersPanel() {
         }
         if (!response.ok) {
           let message = readApiErrorMessage(payload, "Failed to create user.");
-          if (/database_url|prisma:setup|database is not configured/i.test(message)) {
-            message =
-              "Could not reach the database. Refresh and try again — demo mode should still allow creating users.";
+          // Never surface stale prisma/DATABASE_URL setup errors from old deployments.
+          if (
+            /database_url|prisma:setup|database is not configured|database is not connected|environment variable not found/i.test(
+              message,
+            )
+          ) {
+            message = "Could not create user. Refresh the page (Ctrl+Shift+R) and try again.";
           }
           setBannerError(message);
           notify.error(message, "Create failed");
           return;
         }
         if (payload.warning) {
-          notify.warning(payload.warning, "User created (temporary)");
+          notify.warning(payload.warning, "User created");
         } else {
           notify.success(actionMessages.saved, "User created");
         }
