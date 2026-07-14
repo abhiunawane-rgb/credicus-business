@@ -3,9 +3,11 @@ import { NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth";
 import { isAdminRequest } from "@/lib/admin-guard";
 import { disableDatabase, useDatabase } from "@/lib/db-mode";
+import { isDbUnavailable, isUniqueEmailError } from "@/lib/db-unavailable";
 import {
   memoryCreateUser,
   memoryListUsers,
+  memoryMirrorUser,
 } from "@/lib/memory-users";
 import { prisma } from "@/lib/prisma";
 import { friendlyUserApiError } from "@/lib/user-api-errors";
@@ -18,17 +20,29 @@ type CreateUserPayload = {
   status?: UserStatus;
 };
 
-function isDbUnavailable(error: unknown): boolean {
-  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
-  return (
-    message.includes("database_url") ||
-    message.includes("environment variable not found") ||
-    message.includes("can't reach database") ||
-    message.includes("connection refused") ||
-    message.includes("connect econnrefused") ||
-    message.includes("p1001") ||
-    message.includes("timed out fetching")
-  );
+type PublicUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole | string;
+  status: UserStatus | string;
+};
+
+function mergeUsers(primary: PublicUser[], secondary: PublicUser[]): PublicUser[] {
+  const byEmail = new Map<string, PublicUser>();
+  for (const user of secondary) {
+    byEmail.set(user.email.toLowerCase(), {
+      ...user,
+      status: user.status ?? "active",
+    });
+  }
+  for (const user of primary) {
+    byEmail.set(user.email.toLowerCase(), {
+      ...user,
+      status: user.status ?? "active",
+    });
+  }
+  return [...byEmail.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function GET() {
@@ -36,13 +50,15 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (useDatabase()) {
+  const memoryUsers = memoryListUsers();
+
+  if (useDatabase() && process.env.DATABASE_URL) {
     try {
       const users = await prisma.user.findMany({
         orderBy: { name: "asc" },
         select: { id: true, name: true, email: true, role: true, status: true },
       });
-      return NextResponse.json({ data: users });
+      return NextResponse.json({ data: mergeUsers(users, memoryUsers) });
     } catch (error) {
       if (isDbUnavailable(error)) {
         disableDatabase();
@@ -55,7 +71,7 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json({ data: memoryListUsers() });
+  return NextResponse.json({ data: memoryUsers });
 }
 
 export async function POST(request: Request) {
@@ -86,7 +102,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
   }
   if (!Object.values(UserRole).includes(role)) {
-    return NextResponse.json({ error: "Invalid user type. Choose Recruiter, Team Leader, or Admin." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid user type. Choose Recruiter, Team Leader, or Admin." },
+      { status: 400 },
+    );
   }
   if (!Object.values(UserStatus).includes(status)) {
     return NextResponse.json({ error: "Invalid status. Choose Active or Inactive." }, { status: 400 });
@@ -104,8 +123,28 @@ export async function POST(request: Request) {
         },
         select: { id: true, name: true, email: true, role: true, status: true },
       });
+
+      try {
+        memoryMirrorUser({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          password,
+          role: user.role,
+          status: user.status,
+        });
+      } catch {
+        // Memory mirror is best-effort.
+      }
+
       return NextResponse.json({ data: user }, { status: 201 });
     } catch (error) {
+      if (isUniqueEmailError(error)) {
+        return NextResponse.json(
+          { error: "A user with this email address already exists." },
+          { status: 409 },
+        );
+      }
       if (isDbUnavailable(error)) {
         disableDatabase();
       } else {
@@ -120,11 +159,18 @@ export async function POST(request: Request) {
 
   try {
     const user = memoryCreateUser({ name, email, password, role, status });
-    return NextResponse.json({ data: user }, { status: 201 });
-  } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to create user." },
-      { status: 500 },
+      {
+        data: user,
+        warning: process.env.DATABASE_URL
+          ? "Saved in demo memory (database unavailable). Restart may clear this user."
+          : undefined,
+      },
+      { status: 201 },
     );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to create user.";
+    const statusCode = message.toLowerCase().includes("already exists") ? 409 : 500;
+    return NextResponse.json({ error: message }, { status: statusCode });
   }
 }

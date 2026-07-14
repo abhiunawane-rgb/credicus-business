@@ -72,6 +72,7 @@ export function friendlyUserApiError(error: unknown, fallback: string): string {
 export type ApiErrorPayload = {
   error?: string;
   details?: string;
+  warning?: string;
 };
 
 export function readApiErrorMessage(payload: ApiErrorPayload, fallback: string): string {

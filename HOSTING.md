@@ -12,7 +12,7 @@
 | Contact form submission | Needs PostgreSQL |
 | Excel candidate upload | Needs PostgreSQL |
 | Resume upload | Needs PostgreSQL |
-| Admin user management (full CRUD) | Needs PostgreSQL |
+| Admin user management (full CRUD) | Works in demo (in-memory) and PostgreSQL |
 
 **Demo logins (always work without DB):**
 

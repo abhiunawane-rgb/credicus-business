@@ -258,7 +258,12 @@ export default function UsersPanel() {
           credentials: "same-origin",
           body: JSON.stringify({ name, email, role: form.role, status: form.status }),
         });
-        const payload = (await response.json()) as ApiErrorPayload;
+        let payload: ApiErrorPayload = {};
+        try {
+          payload = (await response.json()) as ApiErrorPayload;
+        } catch {
+          payload = { error: "Server returned an invalid response while updating." };
+        }
         if (!response.ok) {
           const message = readApiErrorMessage(payload, "Failed to update user.");
           setBannerError(message);
@@ -273,20 +278,30 @@ export default function UsersPanel() {
           credentials: "same-origin",
           body: JSON.stringify({ name, email, password, role: form.role, status: form.status }),
         });
-        const payload = (await response.json()) as ApiErrorPayload;
+        let payload: ApiErrorPayload & { warning?: string } = {};
+        try {
+          payload = (await response.json()) as ApiErrorPayload & { warning?: string };
+        } catch {
+          payload = { error: "Server returned an invalid response while creating." };
+        }
         if (!response.ok) {
           const message = readApiErrorMessage(payload, "Failed to create user.");
           setBannerError(message);
           notify.error(message, "Create failed");
           return;
         }
-        notify.success(actionMessages.saved, "User created");
+        if (payload.warning) {
+          notify.warning(payload.warning, "User created (temporary)");
+        } else {
+          notify.success(actionMessages.saved, "User created");
+        }
       }
 
       closeForm();
       void fetchUsers();
     } catch {
       setBannerError(editingId ? "Network error while updating. Try again." : "Network error while creating. Try again.");
+      notify.error(editingId ? "Network error while updating." : "Network error while creating.");
     } finally {
       setBusyAction("");
     }

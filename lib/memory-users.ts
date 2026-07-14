@@ -85,6 +85,37 @@ export function memoryCreateUser(data: {
   return toPublic(user);
 }
 
+/** Mirror a DB user into memory so login still works if the DB drops mid-session. */
+export function memoryMirrorUser(data: {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+  role: MemoryUserRole;
+  status?: MemoryUserStatus;
+}): MemoryUserPublic {
+  const email = data.email.trim().toLowerCase();
+  const users = getUsers();
+  const index = users.findIndex((user) => user.email === email || user.id === data.id);
+
+  const next: MemoryUser = {
+    id: data.id,
+    name: data.name.trim(),
+    email,
+    password: hashPassword(data.password),
+    role: data.role,
+    status: data.status ?? "active",
+  };
+
+  if (index >= 0) {
+    users[index] = next;
+  } else {
+    users.unshift(next);
+  }
+
+  return toPublic(next);
+}
+
 export function memoryUpdateUser(
   id: string,
   data: {

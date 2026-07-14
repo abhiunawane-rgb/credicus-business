@@ -1,5 +1,6 @@
 import { CLIENT_COMPANIES } from "@/lib/candidate-types";
 import { disableDatabase, useDatabase } from "@/lib/db-mode";
+import { isDbUnavailable } from "@/lib/db-unavailable";
 import { prisma } from "@/lib/prisma";
 
 type AdminCatalogStore = {
@@ -50,19 +51,6 @@ function mergeUnique(...lists: string[][]) {
   return sortNames([...map.values()]);
 }
 
-function isDbError(error: unknown): boolean {
-  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
-  return (
-    message.includes("database_url") ||
-    message.includes("environment variable not found") ||
-    message.includes("can't reach database") ||
-    message.includes("connection refused") ||
-    message.includes("p1001") ||
-    message.includes("does not exist") ||
-    message.includes("timed out fetching")
-  );
-}
-
 export async function listCities(): Promise<string[]> {
   const memory = getCatalogStore().cities;
   if (!useDatabase() || !process.env.DATABASE_URL) {
@@ -91,7 +79,7 @@ export async function listCities(): Promise<string[]> {
       memory,
     );
   } catch (error) {
-    if (isDbError(error)) disableDatabase();
+    if (isDbUnavailable(error)) disableDatabase();
     return sortNames(memory);
   }
 }
@@ -124,7 +112,7 @@ export async function listCompanies(): Promise<string[]> {
       memory,
     );
   } catch (error) {
-    if (isDbError(error)) disableDatabase();
+    if (isDbUnavailable(error)) disableDatabase();
     return sortNames(memory);
   }
 }
@@ -145,7 +133,7 @@ export async function addCity(name: string): Promise<{ city?: string; error?: st
     try {
       await prisma.catalogCity.create({ data: { name: value } });
     } catch (error) {
-      if (isDbError(error)) {
+      if (isDbUnavailable(error)) {
         disableDatabase();
       } else {
         const message = error instanceof Error ? error.message.toLowerCase() : "";
@@ -175,7 +163,7 @@ export async function addCompany(name: string): Promise<{ company?: string; erro
     try {
       await prisma.clientCompany.create({ data: { name: value } });
     } catch (error) {
-      if (isDbError(error)) {
+      if (isDbUnavailable(error)) {
         disableDatabase();
       } else {
         const message = error instanceof Error ? error.message.toLowerCase() : "";
