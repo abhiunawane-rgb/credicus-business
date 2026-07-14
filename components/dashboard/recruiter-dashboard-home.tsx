@@ -13,17 +13,9 @@ export default function RecruiterDashboardHome() {
       .then((b: { data?: CandidateRecord[] }) => setCandidates(b.data ?? []));
   }, []);
 
-  const appliedCount = candidates.length;
-  const selectedCount = candidates.filter((c) => ["shortlisted", "offered", "hired"].includes(c.status)).length;
-  const rejectedCount = candidates.filter((c) => c.status === "rejected").length;
-
   return (
     <section className="space-y-6">
-      <DashboardCharts
-        appliedCount={appliedCount}
-        selectedCount={selectedCount}
-        rejectedCount={rejectedCount}
-      />
+      <DashboardCharts candidates={candidates} />
     </section>
   );
 }

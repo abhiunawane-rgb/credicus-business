@@ -6,11 +6,14 @@ import ClickableMetricCell from "@/components/dashboard/clickable-metric-cell";
 import ListFilterBar from "@/components/dashboard/list-filter-bar";
 import ReportDownloadButtons from "@/components/dashboard/report-download-buttons";
 import SummaryMetricDetailDialog from "@/components/dashboard/summary-metric-detail-dialog";
+import SortableTh from "@/components/ui/sortable-th";
 import { matchesSearch } from "@/lib/list-filters";
 import type { ClientSummaryRow } from "@/lib/report-summaries";
 import { buildSummaryMetricDetailRows } from "@/lib/summary-metric-details";
+import { sortRows, type SortDirection } from "@/lib/table-sort";
 
 type MetricKey = "interviews" | "confirmed" | "tomorrow" | "selections" | "joinings";
+type SortKey = "client" | MetricKey;
 
 const metricLabels: Record<MetricKey, string> = {
   interviews: "Today Interviews",
@@ -38,6 +41,8 @@ export default function ClientSummaryTable({ title = "Client-wise Summary", show
   const [detail, setDetail] = useState<DetailState | null>(null);
   const [rows, setRows] = useState<ClientSummaryRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortKey, setSortKey] = useState<SortKey>("client");
+  const [sortDir, setSortDir] = useState<SortDirection>("asc");
 
   useEffect(() => {
     let cancelled = false;
@@ -56,10 +61,10 @@ export default function ClientSummaryTable({ title = "Client-wise Summary", show
     };
   }, []);
 
-  const filtered = useMemo(
-    () => rows.filter((row) => matchesSearch(search, [row.client])),
-    [search, rows],
-  );
+  const filtered = useMemo(() => {
+    const matched = rows.filter((row) => matchesSearch(search, [row.client]));
+    return sortRows(matched, (row) => (sortKey === "client" ? row.client : row[sortKey]), sortDir);
+  }, [search, rows, sortKey, sortDir]);
 
   const detailRows = detail
     ? buildSummaryMetricDetailRows({
@@ -78,6 +83,15 @@ export default function ClientSummaryTable({ title = "Client-wise Summary", show
       title: `${metricLabels[metricKey]} — ${rowLabel}`,
       subtitle: "Candidate-level breakdown for this client metric.",
     });
+  }
+
+  function onSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortKey(key);
+    setSortDir(key === "client" ? "asc" : "desc");
   }
 
   return (
@@ -101,13 +115,13 @@ export default function ClientSummaryTable({ title = "Client-wise Summary", show
           </div>
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-credicus-line-default bg-credicus-surface text-credicus-gray">
-                <th className="px-3 py-2 text-left">Client</th>
-                <th className="px-3 py-2 text-left">Today Interviews</th>
-                <th className="px-3 py-2 text-left">Confirmed</th>
-                <th className="px-3 py-2 text-left">Tomorrow</th>
-                <th className="px-3 py-2 text-left">Selections (Month)</th>
-                <th className="px-3 py-2 text-left">Joinings (Month)</th>
+              <tr className="border-b border-credicus-line-default bg-credicus-surface">
+                <SortableTh label="Client" active={sortKey === "client"} direction={sortDir} onSort={() => onSort("client")} />
+                <SortableTh label="Today Interviews" active={sortKey === "interviews"} direction={sortDir} onSort={() => onSort("interviews")} />
+                <SortableTh label="Confirmed" active={sortKey === "confirmed"} direction={sortDir} onSort={() => onSort("confirmed")} />
+                <SortableTh label="Tomorrow" active={sortKey === "tomorrow"} direction={sortDir} onSort={() => onSort("tomorrow")} />
+                <SortableTh label="Selections (Month)" active={sortKey === "selections"} direction={sortDir} onSort={() => onSort("selections")} />
+                <SortableTh label="Joinings (Month)" active={sortKey === "joinings"} direction={sortDir} onSort={() => onSort("joinings")} />
               </tr>
             </thead>
             <tbody>

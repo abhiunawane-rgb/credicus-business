@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ListFilterBar from "@/components/dashboard/list-filter-bar";
 import { useActionFeedback } from "@/components/providers/action-feedback-provider";
+import SortableTh from "@/components/ui/sortable-th";
 import type { CandidateRecord } from "@/lib/candidate-types";
 import {
   APPLICATION_STATUS_LABELS,
@@ -15,6 +16,7 @@ import {
 } from "@/lib/candidate-types";
 import { matchesSearch, paginate, toLocalDateKey, totalPages } from "@/lib/list-filters";
 import { displayNameForEmail } from "@/lib/demo-accounts";
+import { sortRows, type SortDirection } from "@/lib/table-sort";
 
 type CandidateStatusTableProps = {
   detailBasePath: string;
@@ -88,6 +90,8 @@ export default function CandidateStatusTable({
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [savingDateKey, setSavingDateKey] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<"name" | "status" | "mobile" | "process" | "interview" | "location" | "created">("created");
+  const [sortDir, setSortDir] = useState<SortDirection>("desc");
 
   const loadRows = useCallback(async () => {
     setLoading(true);
@@ -108,7 +112,7 @@ export default function CandidateStatusTable({
   }, [loadRows]);
 
   const filtered = useMemo(() => {
-    return rows.filter((row) => {
+    const matched = rows.filter((row) => {
       const name = displayCandidateName(row);
       const matchesStatus = statusFilter === "all" || row.status === statusFilter;
       const matchesText = matchesSearch(search, [
@@ -121,10 +125,33 @@ export default function CandidateStatusTable({
       ]);
       return matchesStatus && matchesText;
     });
-  }, [rows, search, statusFilter]);
+
+    return sortRows(
+      matched,
+      (row) => {
+        if (sortKey === "name") return displayCandidateName(row);
+        if (sortKey === "status") return APPLICATION_STATUS_LABELS[row.status];
+        if (sortKey === "mobile") return row.mobile;
+        if (sortKey === "process") return row.process ?? "";
+        if (sortKey === "interview") return row.interview_date ?? "";
+        if (sortKey === "location") return row.location ?? row.preferred_locations[0] ?? "";
+        return row.created_at;
+      },
+      sortDir,
+    );
+  }, [rows, search, statusFilter, sortKey, sortDir]);
 
   const pages = totalPages(filtered.length, pageSize);
   const pageRows = paginate(filtered, page, pageSize);
+
+  function onSort(key: typeof sortKey) {
+    if (sortKey === key) {
+      setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortKey(key);
+    setSortDir(key === "name" ? "asc" : "desc");
+  }
 
   function resetFilters() {
     setSearch("");
@@ -227,18 +254,18 @@ export default function CandidateStatusTable({
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-credicus-line-subtle bg-credicus-surface text-left text-xs font-semibold uppercase tracking-wide text-credicus-ink-muted">
-                <th className="px-4 py-3">Candidate ID</th>
-                <th className="px-4 py-3">Full Name</th>
-                <th className="px-4 py-3">Application Status</th>
-                <th className="px-4 py-3">Contact</th>
-                <th className="px-4 py-3">Applied For</th>
-                <th className="px-4 py-3">Preferred Date</th>
-                <th className="px-4 py-3">Location</th>
-                {showJoinExitDates ? <th className="px-4 py-3">Join Date</th> : null}
-                {showJoinExitDates ? <th className="px-4 py-3">Exit Date</th> : null}
-                {showAddedBy ? <th className="px-4 py-3">Added By</th> : null}
-                <th className="px-4 py-3">Action</th>
+              <tr className="border-b border-credicus-line-subtle bg-credicus-surface">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-credicus-ink-muted">Candidate ID</th>
+                <SortableTh label="Full Name" active={sortKey === "name"} direction={sortDir} onSort={() => onSort("name")} className="px-4" />
+                <SortableTh label="Application Status" active={sortKey === "status"} direction={sortDir} onSort={() => onSort("status")} className="px-4" />
+                <SortableTh label="Contact" active={sortKey === "mobile"} direction={sortDir} onSort={() => onSort("mobile")} className="px-4" />
+                <SortableTh label="Applied For" active={sortKey === "process"} direction={sortDir} onSort={() => onSort("process")} className="px-4" />
+                <SortableTh label="Preferred Date" active={sortKey === "interview"} direction={sortDir} onSort={() => onSort("interview")} className="px-4" />
+                <SortableTh label="Location" active={sortKey === "location"} direction={sortDir} onSort={() => onSort("location")} className="px-4" />
+                {showJoinExitDates ? <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-credicus-ink-muted">Join Date</th> : null}
+                {showJoinExitDates ? <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-credicus-ink-muted">Exit Date</th> : null}
+                {showAddedBy ? <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-credicus-ink-muted">Added By</th> : null}
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-credicus-ink-muted">Action</th>
               </tr>
             </thead>
             <tbody>
