@@ -242,6 +242,17 @@ a {
     @apply ui-card text-credicus-ink;
   }
 
+  /* Override leftover dark-theme text utilities inside light cards */
+  .ui-card-dark .text-white,
+  .ui-panel-dark .text-white {
+    color: #3d3d3d !important;
+  }
+
+  .ui-card-dark .text-credicus-yellow,
+  .ui-panel-dark .text-credicus-yellow {
+    color: #3d3d3d !important;
+  }
+
   .ui-card-dark-interactive {
     @apply ui-card-interactive;
   }

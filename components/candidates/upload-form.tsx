@@ -102,7 +102,7 @@ export default function CandidateUploadForm() {
             Total: {result.totalRows} | Inserted: {result.insertedCount} | Failed: {result.failedCount}
           </p>
           {result.errors.length ? (
-            <ul className="max-h-48 space-y-1 overflow-auto text-xs text-credicus-yellow/90">
+            <ul className="max-h-48 space-y-1 overflow-auto text-xs text-credicus-ink-secondary">
               {result.errors.map((item, index) => (
                 <li key={`${item.row}-${index}`}>
                   Row {item.row}: {item.message}

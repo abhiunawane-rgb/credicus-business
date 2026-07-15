@@ -119,13 +119,19 @@ export default function EmployeeForm() {
           <tbody>
             {employees.map((emp) => (
               <tr key={emp.id} className="border-b border-credicus-line-default/60">
-                <td className="px-2 py-2">{emp.employee_code ?? "—"}</td>
-                <td className="px-2 py-2">
-                  {emp.first_name} {emp.last_name}
+                <td className="px-2 py-2 font-semibold text-credicus-ink">{emp.employee_code ?? "—"}</td>
+                <td className="px-2 py-2 font-medium text-credicus-ink">
+                  {[emp.first_name, emp.last_name].filter(Boolean).join(" ") || "—"}
                 </td>
-                <td className="px-2 py-2">{emp.department ?? "—"}</td>
-                <td className="px-2 py-2">{emp.designation ?? "—"}</td>
-                <td className="px-2 py-2 text-credicus-yellow">{emp.status}</td>
+                <td className="px-2 py-2 text-credicus-ink-secondary">{emp.department ?? "—"}</td>
+                <td className="px-2 py-2 text-credicus-ink-secondary">{emp.designation ?? "—"}</td>
+                <td className="px-2 py-2">
+                  <span
+                    className={emp.status === "active" ? "ui-badge-active-dark" : "ui-badge-inactive-dark"}
+                  >
+                    {emp.status}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
