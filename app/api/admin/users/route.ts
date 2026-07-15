@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth";
 import { isAdminRequest } from "@/lib/admin-guard";
-import { disableDatabase, useDatabase } from "@/lib/db-mode";
+import { disableDatabase, isDatabaseConfigured, useDatabase } from "@/lib/db-mode";
 import { isUniqueEmailError } from "@/lib/db-unavailable";
 import {
   memoryCreateUser,
+  memoryFindUserByEmail,
   memoryListUsers,
   memoryMirrorUser,
   type MemoryUserRole,
@@ -47,6 +48,24 @@ function mergeUsers(primary: PublicUser[], secondary: PublicUser[]): PublicUser[
   return [...byEmail.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
+async function emailAlreadyExists(email: string): Promise<boolean> {
+  if (memoryFindUserByEmail(email)) return true;
+
+  if (useDatabase()) {
+    try {
+      const { prisma } = await import("@/lib/prisma");
+      const existing = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true },
+      });
+      return Boolean(existing);
+    } catch {
+      disableDatabase();
+    }
+  }
+  return false;
+}
+
 export async function GET() {
   if (!(await isAdminRequest())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -70,11 +89,6 @@ export async function GET() {
   return NextResponse.json({ data: memoryUsers });
 }
 
-/**
- * Create login accounts.
- * Always succeeds without DATABASE_URL (memory/demo).
- * When Postgres is configured on Vercel, also persists durably.
- */
 export async function POST(request: Request) {
   if (!(await isAdminRequest())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -112,7 +126,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid status. Choose Active or Inactive." }, { status: 400 });
   }
 
-  // Path A — Postgres (Vercel + Neon/Supabase). Never return DATABASE_URL setup errors.
+  if (await emailAlreadyExists(email)) {
+    return NextResponse.json(
+      { error: "A user with this email address already exists.", code: "DUPLICATE" },
+      { status: 409 },
+    );
+  }
+
   if (useDatabase()) {
     try {
       const { prisma } = await import("@/lib/prisma");
@@ -142,29 +162,53 @@ export async function POST(request: Request) {
     } catch (error) {
       if (isUniqueEmailError(error)) {
         return NextResponse.json(
-          { error: "A user with this email address already exists." },
+          { error: "A user with this email address already exists.", code: "DUPLICATE" },
           { status: 409 },
         );
       }
       disableDatabase();
-      // Fall through to memory — do not surface prisma:setup / DATABASE_URL messages.
     }
   }
 
-  // Path B — demo / no database (works on Vercel immediately after redeploy)
+  // Without a real DATABASE_URL, Vercel cannot keep users across restarts.
+  if (!isDatabaseConfigured()) {
+    try {
+      const user = memoryCreateUser({ name, email, password, role, status });
+      return NextResponse.json(
+        {
+          data: user,
+          mode: "memory",
+          warning:
+            "User saved temporarily (no DATABASE_URL). Add a PostgreSQL DATABASE_URL on Vercel or users may disappear after redeploy.",
+        },
+        { status: 201 },
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create user.";
+      const statusCode = message.toLowerCase().includes("already exists") ? 409 : 500;
+      return NextResponse.json(
+        { error: message, code: statusCode === 409 ? "DUPLICATE" : undefined },
+        { status: statusCode },
+      );
+    }
+  }
+
   try {
     const user = memoryCreateUser({ name, email, password, role, status });
     return NextResponse.json(
       {
         data: user,
         mode: "memory",
-        warning: "User created in demo mode. Add DATABASE_URL on Vercel for permanent users.",
+        warning: "Database was temporarily unavailable. User saved in memory for this session only.",
       },
       { status: 201 },
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to create user.";
     const statusCode = message.toLowerCase().includes("already exists") ? 409 : 500;
-    return NextResponse.json({ error: message }, { status: statusCode });
+    return NextResponse.json(
+      { error: message, code: statusCode === 409 ? "DUPLICATE" : undefined },
+      { status: statusCode },
+    );
   }
 }

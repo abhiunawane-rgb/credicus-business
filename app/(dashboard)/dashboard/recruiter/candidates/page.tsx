@@ -1,5 +1,6 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import CandidateStatusTable from "@/components/dashboard/candidate-status-table";
+import RecruiterCandidatesClient from "@/components/dashboard/recruiter-candidates-client";
 import { getAuthSession } from "@/lib/auth-session";
 
 export default async function RecruiterCandidatesPage() {
@@ -8,11 +9,8 @@ export default async function RecruiterCandidatesPage() {
   if (session.role !== "recruiter") redirect("/dashboard");
 
   return (
-    <CandidateStatusTable
-      detailBasePath="/dashboard/recruiter/candidates"
-      scope="mine"
-      showDateFilters
-      showJoinExitDates
-    />
+    <Suspense fallback={<div className="ui-card p-6 text-sm text-credicus-ink-muted">Loading candidates…</div>}>
+      <RecruiterCandidatesClient />
+    </Suspense>
   );
 }

@@ -286,7 +286,6 @@ export default function UsersPanel() {
         }
         if (!response.ok) {
           let message = readApiErrorMessage(payload, "Failed to create user.");
-          // Never surface stale prisma/DATABASE_URL setup errors from old deployments.
           if (
             /database_url|prisma:setup|database is not configured|database is not connected|environment variable not found/i.test(
               message,
@@ -294,8 +293,9 @@ export default function UsersPanel() {
           ) {
             message = "Could not create user. Refresh the page (Ctrl+Shift+R) and try again.";
           }
+          const isDuplicate = response.status === 409 || /already exists|duplicate/i.test(message);
           setBannerError(message);
-          notify.error(message, "Create failed");
+          notify.error(message, isDuplicate ? "Duplicate entry" : "Create failed");
           return;
         }
         if (payload.warning) {

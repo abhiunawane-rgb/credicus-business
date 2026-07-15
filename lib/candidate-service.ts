@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import type { CandidateRecord, CommentRecord, EmployeeRecord } from "@/lib/candidate-types";
 import { displayCandidateName, normalizeCandidateRecord } from "@/lib/candidate-types";
 import {
@@ -14,6 +15,13 @@ import {
 import { disableDatabase, useDatabase } from "@/lib/db-mode";
 import { prisma } from "@/lib/prisma";
 
+export class DuplicateRecordError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DuplicateRecordError";
+  }
+}
+
 function isDbError(error: unknown): boolean {
   const message = (error as Error).message ?? "";
   return (
@@ -24,11 +32,32 @@ function isDbError(error: unknown): boolean {
     message.includes("P2021") ||
     message.includes("P2022") ||
     message.includes("Unknown arg") ||
-    message.includes("Invalid") ||
     message.includes("does not exist") ||
     message.includes("ConnectorError") ||
     message.includes("Environment variable not found")
   );
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    return true;
+  }
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  return message.includes("unique constraint") || message.includes("unique violation");
+}
+
+function uniqueFieldMessage(error: unknown, fallback: string): string {
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  if (message.includes("email")) return "A candidate with this email address already exists.";
+  if (message.includes("mobile")) return "A candidate with this mobile number already exists.";
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    const target = error.meta?.target;
+    if (Array.isArray(target)) {
+      if (target.includes("email")) return "A candidate with this email address already exists.";
+      if (target.includes("mobile")) return "A candidate with this mobile number already exists.";
+    }
+  }
+  return fallback;
 }
 
 function handleDbError(error: unknown): void {
@@ -78,6 +107,49 @@ function mapDbCandidate(row: Record<string, unknown>): CandidateRecord {
   };
 }
 
+function normalizeMobile(value: string): string {
+  return value.replace(/\D/g, "");
+}
+
+export async function findDuplicateCandidate(input: {
+  mobile: string;
+  email?: string | null;
+  excludeId?: string;
+}): Promise<"mobile" | "email" | null> {
+  const mobile = normalizeMobile(input.mobile);
+  const email = input.email?.trim().toLowerCase() || null;
+
+  if (useDatabase()) {
+    try {
+      const existing = await prisma.candidate.findMany({
+        where: {
+          OR: [
+            ...(mobile ? [{ mobile: { contains: mobile.slice(-10) } }] : []),
+            ...(email ? [{ email: { equals: email, mode: "insensitive" as const } }] : []),
+          ],
+        },
+        select: { id: true, mobile: true, email: true },
+        take: 25,
+      });
+      for (const row of existing) {
+        if (input.excludeId && row.id === input.excludeId) continue;
+        if (mobile && normalizeMobile(row.mobile) === mobile) return "mobile";
+        if (email && row.email?.toLowerCase() === email) return "email";
+      }
+    } catch (error) {
+      handleDbError(error);
+    }
+  }
+
+  const memory = memoryListCandidates();
+  for (const row of memory) {
+    if (input.excludeId && row.id === input.excludeId) continue;
+    if (mobile && normalizeMobile(row.mobile) === mobile) return "mobile";
+    if (email && row.email?.toLowerCase() === email) return "email";
+  }
+  return null;
+}
+
 export type ListCandidatesOptions = {
   search?: string;
   createdBy?: string;
@@ -112,11 +184,9 @@ export async function listCandidates(options: ListCandidatesOptions = {}): Promi
       }
 
       const rows = await prisma.candidate.findMany({ where, orderBy: { created_at: "desc" } });
-      if (rows.length > 0) {
-        return rows.map((r) =>
-          normalizeCandidateRecord(mapDbCandidate(r as unknown as Record<string, unknown>)),
-        );
-      }
+      return rows.map((r) =>
+        normalizeCandidateRecord(mapDbCandidate(r as unknown as Record<string, unknown>)),
+      );
     } catch (error) {
       handleDbError(error);
     }
@@ -140,6 +210,17 @@ export async function getCandidate(id: string): Promise<CandidateRecord | null> 
 export async function createCandidate(
   data: Partial<CandidateRecord> & { name: string; mobile: string; experience: number },
 ): Promise<CandidateRecord> {
+  const email = data.email?.trim().toLowerCase() || null;
+  const mobile = data.mobile.trim();
+
+  const duplicate = await findDuplicateCandidate({ mobile, email });
+  if (duplicate === "mobile") {
+    throw new DuplicateRecordError("A candidate with this mobile number already exists.");
+  }
+  if (duplicate === "email") {
+    throw new DuplicateRecordError("A candidate with this email address already exists.");
+  }
+
   const payload = {
     first_name: data.first_name ?? null,
     last_name: data.last_name ?? null,
@@ -148,10 +229,10 @@ export async function createCandidate(
       first_name: data.first_name,
       last_name: data.last_name,
     }),
-    mobile: data.mobile,
+    mobile,
     alt_mobile: data.alt_mobile ?? null,
     aadhar_no: data.aadhar_no ?? null,
-    email: data.email ?? null,
+    email,
     skills: data.skills ?? [],
     experience: data.experience,
     source: (data.source as never) ?? "other",
@@ -175,6 +256,8 @@ export async function createCandidate(
     try {
       const row = await prisma.candidate.create({
         data: {
+          first_name: payload.first_name,
+          last_name: payload.last_name,
           name: payload.name,
           mobile: payload.mobile,
           email: payload.email,
@@ -183,6 +266,17 @@ export async function createCandidate(
           skills: payload.skills,
           experience: payload.experience,
           source: payload.source,
+          portal_id: payload.portal_id,
+          process: payload.process,
+          current_company: payload.current_company,
+          education: payload.education,
+          preferred_locations: payload.preferred_locations,
+          salary: payload.salary,
+          location: payload.location,
+          notice_period: payload.notice_period,
+          call_status: payload.call_status,
+          interview_date: payload.interview_date,
+          rejection_reason: payload.rejection_reason,
           resume_url: payload.resume_url,
           status: payload.status,
           created_by: payload.created_by,
@@ -190,6 +284,11 @@ export async function createCandidate(
       });
       return normalizeCandidateRecord(mapDbCandidate(row as unknown as Record<string, unknown>));
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        throw new DuplicateRecordError(
+          uniqueFieldMessage(error, "This candidate already exists in the system."),
+        );
+      }
       handleDbError(error);
     }
   }
@@ -234,11 +333,29 @@ export async function updateCandidate(
   data: Partial<CandidateRecord>,
 ): Promise<CandidateRecord | null> {
   const patch = normalizeCandidatePatch(definedFields(data as Record<string, unknown>) as Partial<CandidateRecord>);
+
+  if (patch.mobile || patch.email !== undefined) {
+    const existing = await getCandidate(id);
+    const duplicate = await findDuplicateCandidate({
+      mobile: patch.mobile ?? existing?.mobile ?? "",
+      email: patch.email !== undefined ? patch.email : existing?.email,
+      excludeId: id,
+    });
+    if (duplicate === "mobile") {
+      throw new DuplicateRecordError("A candidate with this mobile number already exists.");
+    }
+    if (duplicate === "email") {
+      throw new DuplicateRecordError("A candidate with this email address already exists.");
+    }
+  }
+
   if (useDatabase()) {
     try {
       const row = await prisma.candidate.update({
         where: { id },
         data: {
+          first_name: patch.first_name,
+          last_name: patch.last_name,
           name: patch.name,
           mobile: patch.mobile,
           email: patch.email,
@@ -247,6 +364,15 @@ export async function updateCandidate(
           skills: patch.skills,
           experience: patch.experience,
           source: patch.source as never,
+          portal_id: patch.portal_id,
+          process: patch.process,
+          current_company: patch.current_company,
+          education: patch.education,
+          preferred_locations: patch.preferred_locations,
+          salary: patch.salary,
+          location: patch.location,
+          notice_period: patch.notice_period,
+          call_status: patch.call_status as never,
           resume_url: patch.resume_url,
           status: patch.status as never,
           created_by: patch.created_by,
@@ -272,6 +398,11 @@ export async function updateCandidate(
       });
       return normalizeCandidateRecord(mapDbCandidate(row as unknown as Record<string, unknown>));
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        throw new DuplicateRecordError(
+          uniqueFieldMessage(error, "This candidate already exists in the system."),
+        );
+      }
       handleDbError(error);
     }
   }

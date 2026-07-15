@@ -127,9 +127,15 @@ export default function AddCandidateForm({ onSuccess }: Props) {
           initial_comment: form.comments || null,
         }),
       });
-      const payload = (await response.json()) as { data?: { id: string }; error?: string };
+      const payload = (await response.json()) as { data?: { id: string }; error?: string; code?: string };
       if (!response.ok || !payload.data?.id) {
-        setError(payload.error ?? "Could not save candidate. Check your connection and try again.");
+        const message = payload.error ?? "Could not save candidate. Check your connection and try again.";
+        setError(message);
+        if (response.status === 409 || payload.code === "DUPLICATE") {
+          notify.error(message, "Duplicate entry");
+        } else {
+          notify.error(message, "Save failed");
+        }
         return;
       }
 
@@ -142,7 +148,8 @@ export default function AddCandidateForm({ onSuccess }: Props) {
         setFieldErrors({});
         firstFieldRef.current?.focus();
       } else {
-        router.push(`/dashboard/recruiter/candidates/${payload.data.id}`);
+        // Prefer list page — avoids serverless memory 404 when DB is unavailable.
+        router.push(`/dashboard/recruiter/candidates?added=${encodeURIComponent(payload.data.id)}`);
       }
     } catch {
       notify.error(actionMessages.saveFailed);

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createCandidate, listCandidates } from "@/lib/candidate-service";
+import { createCandidate, DuplicateRecordError, listCandidates } from "@/lib/candidate-service";
 import { normalizeEmail } from "@/lib/demo-accounts";
 import { requireRequestRole, unauthorizedResponse } from "@/lib/request-auth";
 
@@ -106,6 +106,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ data: candidate }, { status: 201 });
   } catch (error) {
+    if (error instanceof DuplicateRecordError) {
+      return NextResponse.json({ error: error.message, code: "DUPLICATE" }, { status: 409 });
+    }
     return NextResponse.json(
       { error: "Failed to create candidate.", details: (error as Error).message },
       { status: 500 },
