@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth";
 import { isAdminRequest } from "@/lib/admin-guard";
-import { disableDatabase, isDatabaseConfigured, useDatabase } from "@/lib/db-mode";
-import { isUniqueEmailError } from "@/lib/db-unavailable";
 import {
-  memoryCreateUser,
-  memoryFindUserByEmail,
-  memoryListUsers,
+  DatabaseRequiredError,
+  DatabaseUnavailableError,
+  isDatabaseConfigured,
+  useDatabase,
+} from "@/lib/db-mode";
+import { isUniqueEmailError } from "@/lib/db-unavailable";
+import { friendlyUserApiError } from "@/lib/user-api-errors";
+import {
   memoryMirrorUser,
   type MemoryUserRole,
   type MemoryUserStatus,
@@ -20,50 +23,41 @@ type CreateUserPayload = {
   status?: MemoryUserStatus;
 };
 
-type PublicUser = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-};
-
 const ROLES: MemoryUserRole[] = ["recruiter", "team_leader", "admin"];
 const STATUSES: MemoryUserStatus[] = ["active", "inactive"];
 
-function mergeUsers(primary: PublicUser[], secondary: PublicUser[]): PublicUser[] {
-  const byEmail = new Map<string, PublicUser>();
-  for (const user of secondary) {
-    byEmail.set(user.email.toLowerCase(), {
-      ...user,
-      status: user.status ?? "active",
-    });
-  }
-  for (const user of primary) {
-    byEmail.set(user.email.toLowerCase(), {
-      ...user,
-      status: user.status ?? "active",
-    });
-  }
-  return [...byEmail.values()].sort((a, b) => a.name.localeCompare(b.name));
+function databaseMissingResponse() {
+  return NextResponse.json(
+    {
+      error:
+        "Database is not configured. Add a PostgreSQL DATABASE_URL in your hosting environment variables, run npm run prisma:setup, then restart the app.",
+      code: "DATABASE_REQUIRED",
+    },
+    { status: 503 },
+  );
+}
+
+function databaseFailedResponse(error: unknown) {
+  return NextResponse.json(
+    {
+      error: friendlyUserApiError(
+        error,
+        "Database error while saving user. Check DATABASE_URL and run npm run prisma:setup.",
+      ),
+      code: "DATABASE_UNAVAILABLE",
+      details: error instanceof Error ? error.message : undefined,
+    },
+    { status: 503 },
+  );
 }
 
 async function emailAlreadyExists(email: string): Promise<boolean> {
-  if (memoryFindUserByEmail(email)) return true;
-
-  if (useDatabase()) {
-    try {
-      const { prisma } = await import("@/lib/prisma");
-      const existing = await prisma.user.findUnique({
-        where: { email },
-        select: { id: true },
-      });
-      return Boolean(existing);
-    } catch {
-      disableDatabase();
-    }
-  }
-  return false;
+  const { prisma } = await import("@/lib/prisma");
+  const existing = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+  return Boolean(existing);
 }
 
 export async function GET() {
@@ -71,27 +65,35 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const memoryUsers = memoryListUsers();
-
-  if (useDatabase()) {
-    try {
-      const { prisma } = await import("@/lib/prisma");
-      const users = await prisma.user.findMany({
-        orderBy: { name: "asc" },
-        select: { id: true, name: true, email: true, role: true, status: true },
-      });
-      return NextResponse.json({ data: mergeUsers(users, memoryUsers) });
-    } catch {
-      disableDatabase();
-    }
+  if (!isDatabaseConfigured() || !useDatabase()) {
+    return databaseMissingResponse();
   }
 
-  return NextResponse.json({ data: memoryUsers });
+  try {
+    const { prisma } = await import("@/lib/prisma");
+    const users = await prisma.user.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, email: true, role: true, status: true },
+    });
+    return NextResponse.json({
+      data: users.map((user) => ({
+        ...user,
+        status: user.status ?? "active",
+      })),
+      mode: "database",
+    });
+  } catch (error) {
+    return databaseFailedResponse(error);
+  }
 }
 
 export async function POST(request: Request) {
   if (!(await isAdminRequest())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!isDatabaseConfigured() || !useDatabase()) {
+    return databaseMissingResponse();
   }
 
   let payload: CreateUserPayload;
@@ -126,89 +128,50 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid status. Choose Active or Inactive." }, { status: 400 });
   }
 
-  if (await emailAlreadyExists(email)) {
-    return NextResponse.json(
-      { error: "A user with this email address already exists.", code: "DUPLICATE" },
-      { status: 409 },
-    );
-  }
-
-  if (useDatabase()) {
-    try {
-      const { prisma } = await import("@/lib/prisma");
-      const user = await prisma.user.create({
-        data: {
-          name,
-          email,
-          password: hashPassword(password),
-          role,
-          status,
-        },
-        select: { id: true, name: true, email: true, role: true, status: true },
-      });
-      try {
-        memoryMirrorUser({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          password,
-          role: user.role as MemoryUserRole,
-          status: user.status as MemoryUserStatus,
-        });
-      } catch {
-        // ignore
-      }
-      return NextResponse.json({ data: user, mode: "database" }, { status: 201 });
-    } catch (error) {
-      if (isUniqueEmailError(error)) {
-        return NextResponse.json(
-          { error: "A user with this email address already exists.", code: "DUPLICATE" },
-          { status: 409 },
-        );
-      }
-      disableDatabase();
-    }
-  }
-
-  // Without a real DATABASE_URL, Vercel cannot keep users across restarts.
-  if (!isDatabaseConfigured()) {
-    try {
-      const user = memoryCreateUser({ name, email, password, role, status });
-      return NextResponse.json(
-        {
-          data: user,
-          mode: "memory",
-          warning:
-            "User saved temporarily (no DATABASE_URL). Add a PostgreSQL DATABASE_URL on Vercel or users may disappear after redeploy.",
-        },
-        { status: 201 },
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create user.";
-      const statusCode = message.toLowerCase().includes("already exists") ? 409 : 500;
-      return NextResponse.json(
-        { error: message, code: statusCode === 409 ? "DUPLICATE" : undefined },
-        { status: statusCode },
-      );
-    }
-  }
-
   try {
-    const user = memoryCreateUser({ name, email, password, role, status });
-    return NextResponse.json(
-      {
-        data: user,
-        mode: "memory",
-        warning: "Database was temporarily unavailable. User saved in memory for this session only.",
+    if (await emailAlreadyExists(email)) {
+      return NextResponse.json(
+        { error: "A user with this email address already exists.", code: "DUPLICATE" },
+        { status: 409 },
+      );
+    }
+
+    const { prisma } = await import("@/lib/prisma");
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashPassword(password),
+        role,
+        status,
       },
-      { status: 201 },
-    );
+      select: { id: true, name: true, email: true, role: true, status: true },
+    });
+
+    try {
+      memoryMirrorUser({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        password,
+        role: user.role as MemoryUserRole,
+        status: user.status as MemoryUserStatus,
+      });
+    } catch {
+      // mirror is best-effort for same-instance login cache only
+    }
+
+    return NextResponse.json({ data: user, mode: "database" }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to create user.";
-    const statusCode = message.toLowerCase().includes("already exists") ? 409 : 500;
-    return NextResponse.json(
-      { error: message, code: statusCode === 409 ? "DUPLICATE" : undefined },
-      { status: statusCode },
-    );
+    if (isUniqueEmailError(error)) {
+      return NextResponse.json(
+        { error: "A user with this email address already exists.", code: "DUPLICATE" },
+        { status: 409 },
+      );
+    }
+    if (error instanceof DatabaseRequiredError || error instanceof DatabaseUnavailableError) {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 503 });
+    }
+    return databaseFailedResponse(error);
   }
 }

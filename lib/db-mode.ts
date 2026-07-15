@@ -1,7 +1,7 @@
 /**
  * Prefer PostgreSQL whenever DATABASE_URL is usable.
- * CREDICUS_DEMO_MODE only forces memory when no usable database is configured.
- * (Previously DEMO_MODE ignored DATABASE_URL and caused create→404 / lost users on Vercel.)
+ * Never permanently flip to memory after a transient DB error — that caused users
+ * to "save" in memory and vanish after refresh on Vercel.
  */
 
 function hasUsableDatabaseUrl(): boolean {
@@ -13,21 +13,51 @@ function hasUsableDatabaseUrl(): boolean {
   return true;
 }
 
-let memoryOnly = !hasUsableDatabaseUrl();
+/** Test-only override. Production always follows DATABASE_URL. */
+let forceMemoryOnly = false;
 
 export function useDatabase(): boolean {
-  return !memoryOnly;
+  if (forceMemoryOnly) return false;
+  return hasUsableDatabaseUrl();
 }
 
+/**
+ * Kept for call-site compatibility. Does NOT disable Postgres for the process —
+ * sticky disable previously made create→memory and list→empty across refreshes.
+ */
 export function disableDatabase(): void {
-  memoryOnly = true;
+  // no-op by design when DATABASE_URL is configured
 }
 
 export function isDatabaseConfigured(): boolean {
   return hasUsableDatabaseUrl();
 }
 
-/** Explicitly force demo/memory mode (tests / recovery). */
+/** Explicitly force demo/memory mode (tests only). */
 export function enableMemoryOnlyMode(): void {
-  memoryOnly = true;
+  forceMemoryOnly = true;
+}
+
+export function clearMemoryOnlyMode(): void {
+  forceMemoryOnly = false;
+}
+
+export class DatabaseRequiredError extends Error {
+  readonly code = "DATABASE_REQUIRED";
+
+  constructor(
+    message = "PostgreSQL DATABASE_URL is required. Users and other data cannot be stored in memory on the live server.",
+  ) {
+    super(message);
+    this.name = "DatabaseRequiredError";
+  }
+}
+
+export class DatabaseUnavailableError extends Error {
+  readonly code = "DATABASE_UNAVAILABLE";
+
+  constructor(message = "Cannot reach the database. Check DATABASE_URL and that tables exist (npm run prisma:setup).") {
+    super(message);
+    this.name = "DatabaseUnavailableError";
+  }
 }

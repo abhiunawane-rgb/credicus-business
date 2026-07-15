@@ -10,10 +10,8 @@ const GENERIC_ERRORS = new Set([
 function messageFromText(message: string): string | null {
   const lower = message.toLowerCase();
 
-  // Never ask admins to set DATABASE_URL while creating users — create falls back to memory.
-  // Keep a soft message only for unrelated tooling surfaces that still need the hint.
   if (lower.includes("database_url") || lower.includes("environment variable not found")) {
-    return "Database is temporarily unavailable. Try again — accounts can still be saved in demo mode.";
+    return "PostgreSQL DATABASE_URL is missing. Add it in Vercel/cPanel environment variables, run npm run prisma:setup, then restart.";
   }
 
   if (
@@ -52,7 +50,7 @@ export function friendlyUserApiError(error: unknown, fallback: string): string {
       return "This email or value is already in use.";
     }
     if (error.code === "P2025") {
-      return "User not found. They may have been removed or only exist as a demo account.";
+      return "User not found.";
     }
     if (error.code === "P2022") {
       return "Database schema is out of date. Run: npm run prisma:setup";
@@ -60,7 +58,7 @@ export function friendlyUserApiError(error: unknown, fallback: string): string {
   }
 
   if (error instanceof Prisma.PrismaClientInitializationError) {
-    return "Database is temporarily unavailable. Accounts can still be saved in demo mode.";
+    return "Cannot connect to PostgreSQL. Check DATABASE_URL and that the database is online.";
   }
 
   if (error instanceof Error) {
@@ -75,6 +73,7 @@ export type ApiErrorPayload = {
   error?: string;
   details?: string;
   warning?: string;
+  code?: string;
 };
 
 export function readApiErrorMessage(payload: ApiErrorPayload, fallback: string): string {

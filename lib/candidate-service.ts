@@ -12,7 +12,11 @@ import {
   memoryListEmployees,
   memoryUpdateCandidate,
 } from "@/lib/memory-store";
-import { disableDatabase, useDatabase } from "@/lib/db-mode";
+import {
+  DatabaseUnavailableError,
+  isDatabaseConfigured,
+  useDatabase,
+} from "@/lib/db-mode";
 import { prisma } from "@/lib/prisma";
 
 export class DuplicateRecordError extends Error {
@@ -60,9 +64,15 @@ function uniqueFieldMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-function handleDbError(error: unknown): void {
-  if (isDbError(error)) {
-    disableDatabase();
+function handleDbError(error: unknown, fallbackToMemory: boolean): void {
+  if (isDatabaseConfigured()) {
+    throw new DatabaseUnavailableError(
+      error instanceof Error
+        ? `Database error: ${error.message}`
+        : "Database is unavailable. Data was not saved.",
+    );
+  }
+  if (isDbError(error) && fallbackToMemory) {
     return;
   }
   throw error;
@@ -137,7 +147,7 @@ export async function findDuplicateCandidate(input: {
         if (email && row.email?.toLowerCase() === email) return "email";
       }
     } catch (error) {
-      handleDbError(error);
+      handleDbError(error, true);
     }
   }
 
@@ -188,7 +198,7 @@ export async function listCandidates(options: ListCandidatesOptions = {}): Promi
         normalizeCandidateRecord(mapDbCandidate(r as unknown as Record<string, unknown>)),
       );
     } catch (error) {
-      handleDbError(error);
+      handleDbError(error, true);
     }
   }
   return memoryListCandidates({ search, createdBy, dateFrom, dateTo }).map(normalizeCandidateRecord);
@@ -200,7 +210,7 @@ export async function getCandidate(id: string): Promise<CandidateRecord | null> 
       const row = await prisma.candidate.findUnique({ where: { id } });
       if (row) return normalizeCandidateRecord(mapDbCandidate(row as unknown as Record<string, unknown>));
     } catch (error) {
-      handleDbError(error);
+      handleDbError(error, true);
     }
   }
   const candidate = memoryGetCandidate(id);
@@ -289,8 +299,12 @@ export async function createCandidate(
           uniqueFieldMessage(error, "This candidate already exists in the system."),
         );
       }
-      handleDbError(error);
+      handleDbError(error, true);
     }
+  }
+
+  if (isDatabaseConfigured()) {
+    throw new DatabaseUnavailableError("Could not save candidate to the database.");
   }
 
   return normalizeCandidateRecord(
@@ -403,7 +417,7 @@ export async function updateCandidate(
           uniqueFieldMessage(error, "This candidate already exists in the system."),
         );
       }
-      handleDbError(error);
+      handleDbError(error, true);
     }
   }
   const updated = memoryUpdateCandidate(id, patch);
@@ -416,14 +430,105 @@ export async function deleteCandidate(id: string): Promise<boolean> {
       await prisma.candidate.delete({ where: { id } });
       return true;
     } catch (error) {
-      handleDbError(error);
+      handleDbError(error, true);
     }
   }
   return memoryDeleteCandidate(id);
 }
 
-/** Comments use in-memory store (works without DB; run prisma:generate for DB persistence). */
+/** Employees persist to PostgreSQL when DATABASE_URL is set. */
+export async function listEmployees(): Promise<EmployeeRecord[]> {
+  if (useDatabase()) {
+    try {
+      const rows = await prisma.employee.findMany({ orderBy: { created_at: "desc" } });
+      return rows.map((row) => ({
+        id: row.id,
+        employee_code: row.employee_code,
+        first_name: row.first_name,
+        last_name: row.last_name,
+        email: row.email,
+        mobile: row.mobile,
+        department: row.department,
+        designation: row.designation,
+        joining_date: row.joining_date ? row.joining_date.toISOString().slice(0, 10) : null,
+        status: row.status,
+        created_at: row.created_at.toISOString(),
+      }));
+    } catch (error) {
+      handleDbError(error, true);
+    }
+  }
+  if (isDatabaseConfigured()) {
+    throw new DatabaseUnavailableError("Could not load employees from the database.");
+  }
+  return memoryListEmployees();
+}
+
+export async function createEmployee(
+  data: Omit<EmployeeRecord, "id" | "created_at">,
+): Promise<EmployeeRecord> {
+  if (useDatabase()) {
+    try {
+      const row = await prisma.employee.create({
+        data: {
+          employee_code: data.employee_code ?? null,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email ?? null,
+          mobile: data.mobile,
+          department: data.department ?? null,
+          designation: data.designation ?? null,
+          joining_date: data.joining_date ? new Date(data.joining_date) : null,
+          status: data.status ?? "active",
+        },
+      });
+      return {
+        id: row.id,
+        employee_code: row.employee_code,
+        first_name: row.first_name,
+        last_name: row.last_name,
+        email: row.email,
+        mobile: row.mobile,
+        department: row.department,
+        designation: row.designation,
+        joining_date: row.joining_date ? row.joining_date.toISOString().slice(0, 10) : null,
+        status: row.status,
+        created_at: row.created_at.toISOString(),
+      };
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        throw new DuplicateRecordError("An employee with this code already exists.");
+      }
+      handleDbError(error, true);
+    }
+  }
+  if (isDatabaseConfigured()) {
+    throw new DatabaseUnavailableError("Could not save employee to the database.");
+  }
+  return memoryCreateEmployee(data);
+}
+
+/** Comments persist to PostgreSQL when DATABASE_URL is set. */
 export async function listComments(candidateId: string): Promise<CommentRecord[]> {
+  if (useDatabase()) {
+    try {
+      const rows = await prisma.candidateComment.findMany({
+        where: { candidate_id: candidateId },
+        orderBy: { created_at: "desc" },
+      });
+      return rows.map((row) => ({
+        id: row.id,
+        candidate_id: row.candidate_id,
+        author_id: row.author_id,
+        author_name: row.author_name,
+        author_email: row.author_email,
+        content: row.content,
+        created_at: row.created_at.toISOString(),
+      }));
+    } catch (error) {
+      handleDbError(error, true);
+    }
+  }
   return memoryListComments(candidateId);
 }
 
@@ -432,16 +537,32 @@ export async function addComment(
   content: string,
   author: { id?: string; name: string; email?: string },
 ): Promise<CommentRecord> {
+  if (useDatabase()) {
+    try {
+      const row = await prisma.candidateComment.create({
+        data: {
+          candidate_id: candidateId,
+          author_id: author.id ?? null,
+          author_name: author.name,
+          author_email: author.email ?? null,
+          content,
+        },
+      });
+      return {
+        id: row.id,
+        candidate_id: row.candidate_id,
+        author_id: row.author_id,
+        author_name: row.author_name,
+        author_email: row.author_email,
+        content: row.content,
+        created_at: row.created_at.toISOString(),
+      };
+    } catch (error) {
+      handleDbError(error, true);
+    }
+  }
+  if (isDatabaseConfigured()) {
+    throw new DatabaseUnavailableError("Could not save comment to the database.");
+  }
   return memoryAddComment(candidateId, content, author);
-}
-
-/** Employees use in-memory store (works without DB). */
-export async function listEmployees(): Promise<EmployeeRecord[]> {
-  return memoryListEmployees();
-}
-
-export async function createEmployee(
-  data: Omit<EmployeeRecord, "id" | "created_at">,
-): Promise<EmployeeRecord> {
-  return memoryCreateEmployee(data);
 }

@@ -285,24 +285,18 @@ export default function UsersPanel() {
           payload = { error: "Server returned an invalid response while creating." };
         }
         if (!response.ok) {
-          let message = readApiErrorMessage(payload, "Failed to create user.");
-          if (
-            /database_url|prisma:setup|database is not configured|database is not connected|environment variable not found/i.test(
-              message,
-            )
-          ) {
-            message = "Could not create user. Refresh the page (Ctrl+Shift+R) and try again.";
-          }
+          const message = readApiErrorMessage(payload, "Failed to create user.");
           const isDuplicate = response.status === 409 || /already exists|duplicate/i.test(message);
           setBannerError(message);
           notify.error(message, isDuplicate ? "Duplicate entry" : "Create failed");
           return;
         }
         if (payload.warning) {
-          notify.warning(payload.warning, "User created");
-        } else {
-          notify.success(actionMessages.saved, "User created");
+          notify.warning(payload.warning, "Not saved permanently");
+          setBannerError(payload.warning);
+          return;
         }
+        notify.success(actionMessages.saved, "User created");
       }
 
       closeForm();

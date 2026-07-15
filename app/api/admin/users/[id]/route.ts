@@ -2,7 +2,7 @@ import { UserRole, UserStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth";
 import { isAdminRequest } from "@/lib/admin-guard";
-import { disableDatabase, useDatabase } from "@/lib/db-mode";
+import { isDatabaseConfigured, useDatabase } from "@/lib/db-mode";
 import { isUniqueEmailError } from "@/lib/db-unavailable";
 import {
   memoryDeleteUser,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/memory-users";
 import { getRequestSession } from "@/lib/request-auth";
 import { prisma } from "@/lib/prisma";
+import { friendlyUserApiError } from "@/lib/user-api-errors";
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -25,9 +26,38 @@ type UpdateUserPayload = {
   status?: UserStatus;
 };
 
+function databaseMissingResponse() {
+  return NextResponse.json(
+    {
+      error:
+        "Database is not configured. Add a PostgreSQL DATABASE_URL in your hosting environment variables, run npm run prisma:setup, then restart the app.",
+      code: "DATABASE_REQUIRED",
+    },
+    { status: 503 },
+  );
+}
+
+function databaseFailedResponse(error: unknown) {
+  return NextResponse.json(
+    {
+      error: friendlyUserApiError(
+        error,
+        "Database error while updating user. Check DATABASE_URL and run npm run prisma:setup.",
+      ),
+      code: "DATABASE_UNAVAILABLE",
+      details: error instanceof Error ? error.message : undefined,
+    },
+    { status: 503 },
+  );
+}
+
 export async function PATCH(request: Request, { params }: RouteParams) {
   if (!(await isAdminRequest())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!isDatabaseConfigured() || !useDatabase()) {
+    return databaseMissingResponse();
   }
 
   const session = await getRequestSession();
@@ -68,88 +98,64 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     }
   }
 
-  if (useDatabase()) {
-    try {
-      const updated = await prisma.user.update({
-        where: { id },
-        data: {
-          name: payload.name?.trim(),
-          email: email,
+  try {
+    const updated = await prisma.user.update({
+      where: { id },
+      data: {
+        name: payload.name?.trim(),
+        email: email,
+        role: payload.role,
+        status: payload.status,
+        password: password ? hashPassword(password) : undefined,
+      },
+      select: { id: true, name: true, email: true, role: true, status: true },
+    });
+
+    if (password) {
+      try {
+        memoryMirrorUser({
+          id: updated.id,
+          name: updated.name,
+          email: updated.email,
+          password,
+          role: updated.role,
+          status: updated.status,
+        });
+      } catch {
+        // best-effort mirror
+      }
+    } else if (memoryFindUserById(id)) {
+      try {
+        memoryUpdateUser(id, {
+          name: payload.name,
+          email: payload.email,
           role: payload.role,
           status: payload.status,
-          password: password ? hashPassword(password) : undefined,
-        },
-        select: { id: true, name: true, email: true, role: true, status: true },
-      });
-
-      if (password) {
-        try {
-          memoryMirrorUser({
-            id: updated.id,
-            name: updated.name,
-            email: updated.email,
-            password,
-            role: updated.role,
-            status: updated.status,
-          });
-        } catch {
-          // best-effort mirror
-        }
-      } else if (memoryFindUserById(id)) {
-        try {
-          memoryUpdateUser(id, {
-            name: payload.name,
-            email: payload.email,
-            role: payload.role,
-            status: payload.status,
-          });
-        } catch {
-          // best-effort mirror
-        }
+        });
+      } catch {
+        // best-effort mirror
       }
-
-      return NextResponse.json({ data: updated });
-    } catch (error) {
-      if (isUniqueEmailError(error)) {
-        return NextResponse.json(
-          { error: "A user with this email address already exists." },
-          { status: 409 },
-        );
-      }
-      disableDatabase();
-      // Fall through to memory for demo / offline accounts.
     }
-  }
 
-  try {
-    if (!memoryFindUserById(id)) {
+    return NextResponse.json({ data: updated, mode: "database" });
+  } catch (error) {
+    if (isUniqueEmailError(error)) {
       return NextResponse.json(
-        { error: "User not found. They may have been removed or only exist as a demo account." },
-        { status: 404 },
+        { error: "A user with this email address already exists." },
+        { status: 409 },
       );
     }
-    const updated = memoryUpdateUser(id, {
-      name: payload.name,
-      email: payload.email,
-      role: payload.role,
-      status: payload.status,
-      password: password || undefined,
-    });
-    return NextResponse.json({ data: updated });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to update user.";
-    const statusCode = message.toLowerCase().includes("already exists")
-      ? 409
-      : message.toLowerCase().includes("not found")
-        ? 404
-        : 500;
-    return NextResponse.json({ error: message }, { status: statusCode });
+    return databaseFailedResponse(error);
   }
 }
 
 export async function DELETE(_: Request, { params }: RouteParams) {
   if (!(await isAdminRequest())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!isDatabaseConfigured() || !useDatabase()) {
+    return databaseMissingResponse();
   }
 
   const session = await getRequestSession();
@@ -159,27 +165,15 @@ export async function DELETE(_: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "You cannot delete your own account." }, { status: 400 });
   }
 
-  if (useDatabase()) {
-    try {
-      await prisma.user.delete({ where: { id } });
-      try {
-        if (memoryFindUserById(id)) memoryDeleteUser(id);
-      } catch {
-        // ignore memory miss
-      }
-      return NextResponse.json({ success: true });
-    } catch {
-      disableDatabase();
-    }
-  }
-
   try {
-    memoryDeleteUser(id);
-    return NextResponse.json({ success: true });
+    await prisma.user.delete({ where: { id } });
+    try {
+      if (memoryFindUserById(id)) memoryDeleteUser(id);
+    } catch {
+      // ignore memory miss
+    }
+    return NextResponse.json({ success: true, mode: "database" });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to delete user." },
-      { status: 404 },
-    );
+    return databaseFailedResponse(error);
   }
 }
