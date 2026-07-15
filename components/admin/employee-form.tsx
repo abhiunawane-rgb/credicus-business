@@ -77,7 +77,7 @@ export default function EmployeeForm() {
       <form onSubmit={onSubmit} className="ui-card-dark space-y-4 p-6">
         <div className="flex items-center gap-2 border-b border-credicus-line-default pb-3">
           <UserPlus className="h-5 w-5 text-credicus-yellow" />
-          <h4 className="text-lg font-semibold">Add Employee Data</h4>
+          <h4 className="text-lg font-semibold text-credicus-ink">Add Employee Data</h4>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
           {[
@@ -91,7 +91,7 @@ export default function EmployeeForm() {
             ["joining_date", "Joining Date"],
           ].map(([key, label]) => (
             <div key={key}>
-              <label className="mb-1 block text-xs text-credicus-gray-light">{label}</label>
+              <label className="mb-1 block text-xs text-credicus-ink-muted">{label}</label>
               <input
                 type={key === "joining_date" ? "date" : "text"}
                 required={["first_name", "last_name", "mobile"].includes(key)}
@@ -102,7 +102,7 @@ export default function EmployeeForm() {
             </div>
           ))}
           <div>
-            <label className="mb-1 block text-xs text-credicus-gray-light">Status</label>
+            <label className="mb-1 block text-xs text-credicus-ink-muted">Status</label>
             <select
               value={form.status}
               onChange={(e) => update("status", e.target.value)}
@@ -121,37 +121,39 @@ export default function EmployeeForm() {
       </form>
 
       <div className="ui-card-dark overflow-x-auto p-4">
-        <h4 className="mb-3 font-semibold">Employee Directory</h4>
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="border-b border-credicus-line-default text-credicus-gray">
-              <th className="px-3 py-2 text-left">Code</th>
-              <th className="px-3 py-2 text-left">Name</th>
-              <th className="px-3 py-2 text-left">Department</th>
-              <th className="px-3 py-2 text-left">Designation</th>
-              <th className="px-3 py-2 text-left">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees.map((emp) => (
-              <tr key={emp.id} className="border-b border-credicus-line-default/60">
-                <td className="px-3 py-2 font-semibold text-credicus-ink">{emp.employee_code ?? "—"}</td>
-                <td className="px-3 py-2 font-medium text-credicus-ink">
-                  {[emp.first_name, emp.last_name].filter(Boolean).join(" ") || "—"}
-                </td>
-                <td className="px-3 py-2 text-credicus-ink-secondary">{emp.department ?? "—"}</td>
-                <td className="px-3 py-2 text-credicus-ink-secondary">{emp.designation ?? "—"}</td>
-                <td className="px-3 py-2">
-                  <span
-                    className={emp.status === "active" ? "ui-badge-active-dark" : "ui-badge-inactive-dark"}
-                  >
-                    {emp.status}
-                  </span>
-                </td>
+        <h4 className="mb-3 font-semibold text-credicus-ink">Employee Directory</h4>
+        <div className="ui-data-table-wrap">
+          <table className="ui-data-table min-w-full text-sm">
+            <thead>
+              <tr>
+                <th className="text-left">Code</th>
+                <th className="text-left">Name</th>
+                <th className="text-left">Department</th>
+                <th className="text-left">Designation</th>
+                <th className="text-left">Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {employees.map((emp) => (
+                <tr key={emp.id}>
+                  <td className="font-semibold text-credicus-ink">{emp.employee_code ?? "—"}</td>
+                  <td className="font-medium text-credicus-ink">
+                    {[emp.first_name, emp.last_name].filter(Boolean).join(" ") || "—"}
+                  </td>
+                  <td className="text-credicus-ink-secondary">{emp.department ?? "—"}</td>
+                  <td className="text-credicus-ink-secondary">{emp.designation ?? "—"}</td>
+                  <td>
+                    <span
+                      className={emp.status === "active" ? "ui-badge-active-dark" : "ui-badge-inactive-dark"}
+                    >
+                      {emp.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

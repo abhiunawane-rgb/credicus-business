@@ -72,7 +72,7 @@ export default function EmployeeForm() {
       <form onSubmit={onSubmit} className="ui-card-dark space-y-4 p-6">
         <div className="flex items-center gap-2">
           <UserPlus className="h-5 w-5 text-credicus-yellow" />
-          <h4 className="text-lg font-semibold">Add Employee Data</h4>
+          <h4 className="text-lg font-semibold text-credicus-ink">Add Employee Data</h4>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
           {(
@@ -88,7 +88,7 @@ export default function EmployeeForm() {
             ] as const
           ).map(([key, label]) => (
             <div key={key}>
-              <label className="mb-1 block text-xs text-credicus-gray">{label}</label>
+              <label className="mb-1 block text-xs text-credicus-ink-muted">{label}</label>
               <input
                 type={key === "joining_date" ? "date" : "text"}
                 value={form[key]}
@@ -105,10 +105,10 @@ export default function EmployeeForm() {
       </form>
 
       <div className="ui-card-dark overflow-x-auto p-4">
-        <h4 className="mb-3 font-semibold">Employee Records</h4>
+        <h4 className="mb-3 font-semibold text-credicus-ink">Employee Records</h4>
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="border-b border-credicus-line-default text-credicus-gray">
+            <tr className="border-b border-credicus-line-default text-credicus-ink-muted">
               <th className="px-2 py-2 text-left">Code</th>
               <th className="px-2 py-2 text-left">Name</th>
               <th className="px-2 py-2 text-left">Department</th>

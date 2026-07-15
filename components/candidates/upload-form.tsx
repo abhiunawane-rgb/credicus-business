@@ -59,7 +59,7 @@ export default function CandidateUploadForm() {
     <div className="ui-card-dark space-y-5 p-6">
       <div className="space-y-1">
         <h4 className="text-lg font-semibold">Upload Candidate Excel</h4>
-        <p className="text-sm text-slate-300">
+        <p className="text-sm text-credicus-ink-muted">
           Required columns: name, mobile, email, skills, experience
         </p>
       </div>

@@ -56,7 +56,7 @@ export default function CommentSection({
   }
 
   return (
-    <div className={isDark ? "text-gray-100" : "text-credicus-ink"}>
+    <div className="text-credicus-ink">
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
@@ -108,7 +108,7 @@ export default function CommentSection({
                     {initials(comment.author_name)}
                   </div>
                   <div>
-                    <p className={`text-sm ${isDark ? "text-gray-200" : "text-gray-800"}`}>{comment.content}</p>
+                    <p className="text-sm text-credicus-ink">{comment.content}</p>
                     <p className={`mt-0.5 text-xs ${isDark ? "text-credicus-gray" : "text-credicus-ink-muted"}`}>
                       by {comment.author_email === currentUserEmail ? "You" : comment.author_name} ·{" "}
                       {formatDate(comment.created_at)}

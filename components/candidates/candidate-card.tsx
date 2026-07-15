@@ -144,25 +144,25 @@ export default function CandidateCard({
             {candidate.current_company ? (
               <div className="grid grid-cols-[90px_1fr] gap-2">
                 <dt className={isDark ? "text-credicus-gray" : "text-credicus-gray"}>Previous</dt>
-                <dd className={isDark ? "text-gray-200" : "text-gray-800"}>{candidate.current_company}</dd>
+                <dd className="text-credicus-ink">{candidate.current_company}</dd>
               </div>
             ) : null}
             {candidate.education ? (
               <div className="grid grid-cols-[90px_1fr] gap-2">
                 <dt className={isDark ? "text-credicus-gray" : "text-credicus-gray"}>Education</dt>
-                <dd className={isDark ? "text-gray-200" : "text-gray-800"}>{candidate.education}</dd>
+                <dd className="text-credicus-ink">{candidate.education}</dd>
               </div>
             ) : null}
             {candidate.aadhar_no ? (
               <div className="grid grid-cols-[90px_1fr] gap-2">
                 <dt className={isDark ? "text-credicus-gray" : "text-credicus-gray"}>Aadhar No.</dt>
-                <dd className={isDark ? "text-gray-200" : "text-gray-800"}>{candidate.aadhar_no}</dd>
+                <dd className="text-credicus-ink">{candidate.aadhar_no}</dd>
               </div>
             ) : null}
             {showAddedBy ? (
               <div className="grid grid-cols-[90px_1fr] gap-2">
                 <dt className={isDark ? "text-credicus-gray" : "text-credicus-gray"}>Added by</dt>
-                <dd className={`font-medium ${isDark ? "text-gray-200" : "text-gray-800"}`}>
+                <dd className="font-medium text-credicus-ink">
                   {addedByName ||
                     (candidate.created_by ? displayNameForEmail(candidate.created_by) : "Unknown")}
                 </dd>
@@ -171,7 +171,7 @@ export default function CandidateCard({
             {candidate.preferred_locations.length > 0 ? (
               <div className="grid grid-cols-[90px_1fr] gap-2">
                 <dt className={isDark ? "text-credicus-gray" : "text-credicus-gray"}>Pref. locations</dt>
-                <dd className={isDark ? "text-gray-200" : "text-gray-800"}>
+                <dd className="text-credicus-ink">
                   {candidate.preferred_locations.join(", ")}
                 </dd>
               </div>
@@ -179,7 +179,7 @@ export default function CandidateCard({
             {candidate.skills.length > 0 ? (
               <div className="grid grid-cols-[90px_1fr] gap-2">
                 <dt className={isDark ? "text-credicus-gray" : "text-credicus-gray"}>Key skills</dt>
-                <dd className={isDark ? "text-gray-200" : "text-gray-800"}>{candidate.skills.join(" | ")}</dd>
+                <dd className="text-credicus-ink">{candidate.skills.join(" | ")}</dd>
               </div>
             ) : null}
           </dl>

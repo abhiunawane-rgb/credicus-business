@@ -132,10 +132,8 @@ export default function StageActions({
                   isDark ? "hover:bg-white/5" : "hover:bg-credicus-surface"
                 } ${
                   currentStage === stage
-                    ? "bg-credicus-yellow/10 font-semibold text-credicus-yellow"
-                    : isDark
-                      ? "text-gray-200"
-                      : "text-credicus-ink-secondary"
+                    ? "bg-credicus-yellow/10 font-semibold text-credicus-ink"
+                    : "text-credicus-ink-secondary"
                 }`}
               >
                 {STAGE_LABELS[stage]}
